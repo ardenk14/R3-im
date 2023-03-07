@@ -1,0 +1,24 @@
+<robot name="forearm_roll_link">
+  <link name="forearm_roll_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.1097 -0.0266 0.0000" />
+      <mass value="1.6563" />
+      <inertia ixx="0.0016" ixy="-0.0003" ixz="0.0" iyy="0.003" iyz="-0.0" izz="0.0035" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/forearm_roll_link.obj" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/forearm_roll_link_collision.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

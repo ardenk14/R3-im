@@ -1,0 +1,24 @@
+<robot name="wrist_roll_link">
+  <link name="wrist_roll_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0095 0.0004 -0.0002" />
+      <mass value="0.1354" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/wrist_roll_link.obj" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/wrist_roll_link_collision.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

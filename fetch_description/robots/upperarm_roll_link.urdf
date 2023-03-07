@@ -1,0 +1,24 @@
+<robot name="upperarm_roll_link">
+  <link name="upperarm_roll_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.1165 0.0014 0.0000" />
+      <mass value="2.3311" />
+      <inertia ixx="0.0019" ixy="-0.0001" ixz="0.0" iyy="0.0045" iyz="0.0" izz="0.0047" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/upperarm_roll_link.obj" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/upperarm_roll_link_collision.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

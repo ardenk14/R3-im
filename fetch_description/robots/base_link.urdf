@@ -1,0 +1,24 @@
+<robot name="base_link">
+  <link name="base_link">
+      <inertial>
+        <origin rpy="0 0 0" xyz="-0.0036 0.0 0.0014" />
+        <mass value="70.1294" />
+        <inertia ixx="1.225" ixy="0.0099" ixz="0.0062" iyy="1.2853" iyz="-0.0034" izz="0.987" />
+      </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <geometry>
+          <mesh filename="package://fetch_description/meshes/base_link.obj" />
+        </geometry>
+        <material name="">
+          <color rgba="0.356 0.361 0.376 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <geometry>
+          <mesh filename="package://fetch_description/meshes/base_link_collision.STL" />
+        </geometry>
+      </collision>
+    </link>
+  </robot>

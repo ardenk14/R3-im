@@ -1,0 +1,21 @@
+<robot name="gripper_link">
+  <link name="gripper_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0900 -0.0001 -0.0017" />
+      <mass value="1.5175" />
+      <inertia ixx="0.0013" ixy="-0.0" ixz="0.0" iyy="0.0019" iyz="-0.0" izz="0.0024" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/gripper_link.obj" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://fetch_description/meshes/gripper_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>
