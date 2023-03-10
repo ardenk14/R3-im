@@ -17,8 +17,17 @@ class SymFetch():
         p.setGravity(0,0,-9.81)
         planeId = p.loadURDF("plane.urdf")
         tableId = p.loadURDF("table/table.urdf", (1, 0, 0), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
-        mugId = p.loadURDF("objects/mug.urdf", (0.85, 0,  0.6))
-        #mugId = p.loadURDF("tray/tray_textured2.urdf", (0.5, 0.1,  0.6))
+
+        mug_x_lim = [0.7, 1.0] #limits for mug position
+        mug_y_lim = [-.5, .5]
+        num_mugs = np.random.randint(1,5)
+        mugIds = []
+        for _ in range(num_mugs):
+            mug_x = np.random.uniform(mug_x_lim[0], mug_x_lim[1], 1)
+            mug_y = np.random.uniform(mug_y_lim[0], mug_y_lim[1], 1)
+            mugIds.append(p.loadURDF("objects/mug.urdf", (mug_x, mug_y, 0.6)))
+            p.changeDynamics(mugIds[-1], -1, lateralFriction=0.5) #reduce friction for a bit more realistic sliding
+
         self.fetch = p.loadURDF("fetch_description/robots/fetch_obj.urdf")#, start_pos, start_orientation)
         self.arm_joints = [x for x in range(10,17)]
 
@@ -73,7 +82,13 @@ class SymFetch():
 
 if __name__ == '__main__':
     fps = 15.0
-    n_samples = 100
+    n_samples = 150 #samples (states) per run
+    n_runs = 10 #number of runs, fetch is reinitialized each time
+
+    #limits for velocity and acceleration
+    max_v = 0.5
+    max_a = 0.6
+    max_j = 0.6
 
     #set up data type as [xt, qt, qdot, xt+1, ]
     step_dtype = np.dtype([('xt', np.uint8, (224,224,3)),
@@ -82,42 +97,38 @@ if __name__ == '__main__':
                            ('xt_1', np.uint8, (224,224,3)),
                            ('qt_1', np.float32, 7)])
     
-    data = np.zeros(n_samples, dtype=step_dtype)
+    data = np.zeros((n_samples,n_runs), dtype=step_dtype)
+    
+    for run_idx in range(n_runs):
+        fetch = SymFetch()
 
-    fetch = SymFetch()
-    # fetch.set_arm_velocity([0.5]*7)
+        qdot = (2*np.random.rand(7) - 1)*max_v #get initial velocity in [-max_v, max_v]
+        qddot = (2*np.random.rand(7) - 1)*max_a
 
-    #limits for velocity and acceleration
-    max_v = 0.5
-    max_a = 0.6
-    max_j = 0.6
-    qdot = (2*np.random.rand(7) - 1)*max_v #get initial velocity in [-.5,.5]
-    qddot = (2*np.random.rand(7) - 1)*max_a
+        for i in range(n_samples):
 
-    for i in range(n_samples):
+            qdddot = (2*np.random.rand(7) - 1)*max_j #jerk
+            qddot += qdddot
+            qddot = np.clip(qddot, -max_a, max_a)
+            qdot += qddot
+            qdot = np.clip(qdot, -max_v, max_v)
 
-        qdddot = (2*np.random.rand(7) - 1)*max_j #jerk
-        qddot += qdddot
-        qddot = np.clip(qddot, -max_a, max_a)
-        qdot += qddot
-        qdot = np.clip(qdot, -max_v, max_v)
+            fetch.set_arm_velocity(qdot)
 
-        fetch.set_arm_velocity(qdot)
+            #collect images and state
+            data[i,run_idx]['qt'] = fetch.get_joint_angles()
+            data[i,run_idx]['xt'] = fetch.get_image(True)
+            data[i,run_idx]['qdot'] = qdot
 
-        #collect images and state
-        data[i]['qt'] = fetch.get_joint_angles()
-        data[i]['xt'] = fetch.get_image(True)
-        data[i]['qdot'] = qdot
+            #advance sim
+            for _ in range(int(240/fps)):
+                p.stepSimulation()
+                time.sleep(1./240.)
 
-        #advance sim
-        for _ in range(int(240/fps)):
-            p.stepSimulation()
-            time.sleep(1./240.)
-
-        data[i]['qt_1'] = fetch.get_joint_angles()
-        data[i]['xt_1'] = fetch.get_image(True)
-        
+            data[i,run_idx]['qt_1'] = fetch.get_joint_angles()
+            data[i,run_idx]['xt_1'] = fetch.get_image(True)
+            
+        time.sleep(1)
+        p.disconnect()
     np.savez_compressed('data', data=data)
-    time.sleep(5)
-    p.disconnect()
         
