@@ -14,9 +14,9 @@ class SymFetch():
 
         # Upload each link
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
-        # p.setGravity(0,0,-9.81)
+        p.setGravity(0,0,-9.81)
         planeId = p.loadURDF("plane.urdf")
-        # tableId = p.loadURDF("table/table.urdf", (1, 0, 0), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
+        tableId = p.loadURDF("table/table.urdf", (1, 0, 0), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
         self.mugIds = []
 
         self.fetch = p.loadURDF("fetch_description/robots/fetch_obj.urdf")#, start_pos, start_orientation)
@@ -25,7 +25,7 @@ class SymFetch():
         #lock down fetch base and torso lift
         torso_pos = p.getLinkState(self.fetch, 4)[0]
         p.createConstraint(self.fetch, -1, -1, -1, p.JOINT_FIXED, [0,0,0],[0,0,0],[0,0,0])
-        p.createConstraint(self.fetch, 4, -1, -1, p.JOINT_FIXED, [0,0,0], [0,0,0], torso_pos)
+        # p.createConstraint(self.fetch, 4, -1, -1, p.JOINT_FIXED, [0,0,0], [0,0,0], torso_pos)
 
         #set joint limits
         numJoints = p.getNumJoints(self.fetch)
@@ -114,20 +114,17 @@ class SymFetch():
         q = [state[0] for state in states]
         return q
     
-    def push_mug(self, dir=None): #will add direction
+    def move_to_mug(self): #super janky rn
 
         #get mug position
-        # mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
-        # goal_pos = np.array(mug_pos)+[-0.0, 0, 0]
-        goal_pos = p.getLinkState(self.fetch, 17)[0]
-        goal_pos = np.array(goal_pos) + [-0.3, 0.1, 0.1]
+        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
+        goal_pos = np.array(mug_pos)+[-0.2, 0.0, 0.1]
         goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
-                                                   targetOrientation=[1,0,0,0],
-                                                   lowerLimits=self.lower_limits,
-                                                   upperLimits=self.upper_limits,
-                                                   jointRanges=self.range_limits,
-                                                   restPoses=self.rest_poses)
-        # goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos)
+                                                   p.getQuaternionFromEuler((0, 0, 0)),
+                                                   self.lower_limits,
+                                                   self.upper_limits,
+                                                   self.range_limits,
+                                                   self.rest_poses)
         
         numJoints = p.getNumJoints(self.fetch)
         j = 0
@@ -135,10 +132,34 @@ class SymFetch():
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
             if qIndex > -1:
-                p.resetJointState(self.fetch,i,goal_config[qIndex-7])
+                if j==2:
+                    p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
+                else:
+                    p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
                 j += 1
-        # p.setJointMotorControlArray(self.fetch, joints, p.POSITION_CONTROL, targetPositions=goal_config)
-        # print('n joints', p.getNumJoints(self.fetch))
-        print('goal pos', goal_pos)
         
-        print('goal config', goal_config, 'len', len(goal_config))
+
+    def push_mug(self):
+        #get mug position
+        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
+        goal_pos = np.array(mug_pos)+[0.0, -0.5, 0.1]
+        goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
+                                                   p.getQuaternionFromEuler((0, 0, 0)),
+                                                   self.lower_limits,
+                                                   self.upper_limits,
+                                                   self.range_limits,
+                                                   self.rest_poses)
+        
+        numJoints = p.getNumJoints(self.fetch)
+        j = 0
+        for i in range(numJoints):
+            jointInfo = p.getJointInfo(self.fetch, i)
+            qIndex = jointInfo[3]
+            if qIndex > -1:
+                # p.resetJointState(self.fetch,i,goal_config[qIndex-7])
+                if j==2:
+                    # p.resetJointState(self.fetch,i,0.3)
+                    p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
+                else:
+                    p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
+                j += 1
