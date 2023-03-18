@@ -14,22 +14,24 @@ def get_joint_angles():
 
 if __name__ == '__main__':
     fetch = SymFetch()
-    fetch.generate_mugs(random_number=False) #generate one mug
+    fetch.generate_mugs(random_number=False, random_color=True) #generate one mug
     
-    fetch.move_to_mug()
-    # fetch.set_arm_velocity([0,0,0,0,0,0,0])
+    # fetch.move_to_mug()
+    fetch.set_arm_velocity([0,0,0,0,0,0,0])
     # print('initial config', get_joint_angles())
 
     for i in range(500):
-        fetch.get_image(True)
+        if i%16==0:
+            fetch.get_image(True)
         p.stepSimulation()
         time.sleep(1./240.)
 
-    fetch.push_mug()
-    for i in range(500):
-        fetch.get_image(True)
-        p.stepSimulation()
-        time.sleep(1./240.)
+    # fetch.push_mug()
+    # for i in range(500):
+    #     if i%16==0:
+    #         fetch.get_image(True)
+    #     p.stepSimulation()
+    #     time.sleep(1./240.)
 
     print('end pos', p.getLinkState(fetch.fetch, 17)[0])
     time.sleep(10)
