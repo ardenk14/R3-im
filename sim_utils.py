@@ -8,9 +8,12 @@ import cv2
 
 class SymFetch():
 
-    def __init__(self) -> None:
+    def __init__(self, gui=True) -> None:
         # Connect to pybullet physics engine
-        physicsClient = p.connect(p.GUI)
+        if gui:
+            physicsClient = p.connect(p.GUI)
+        else:
+            physicsClient = p.connect(p.DIRECT)
 
         # Upload each link
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
@@ -39,7 +42,7 @@ class SymFetch():
         for i in range(numJoints):
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
-            print(jointInfo)
+            # print(jointInfo)
             if qIndex > -1:
                 if jointInfo[1] == b'torso_lift_joint':
                     # tpos = p.getJointState(self.fetch, i)[0]
@@ -60,11 +63,11 @@ class SymFetch():
                 self.range_limits.append(self.upper_limits[-1] - self.lower_limits[-1])
                 # self.range_limits.append(0)
                 j += 1
-        print(j)
-        print('low limits', self.lower_limits)
-        print('high limits', self.upper_limits)
-        print('ranges', self.range_limits)
-        print('rest', self.rest_poses)
+        # print(j)
+        # print('low limits', self.lower_limits)
+        # print('high limits', self.upper_limits)
+        # print('ranges', self.range_limits)
+        # print('rest', self.rest_poses)
 
         # Set camera properties and positions
         self.img_width = 640
@@ -149,8 +152,8 @@ class SymFetch():
                                                 maxNumIterations=50,
                                                 jointDamping=self.joint_damping,
                                                 solver=p.IK_DLS)
-        print('goal', goal_pos)
-        print(goal_config)
+        # print('goal', goal_pos)
+        # print(goal_config)
         
         numJoints = p.getNumJoints(self.fetch)
         j = 0
