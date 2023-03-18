@@ -36,7 +36,7 @@ if __name__ == '__main__':
                             ('qdott', np.float32, 7),
                             ('at', np.float32, 7),
                             ('at-1', np.float32, 7),
-                            ('xt_1', np.uint8, 2048),
+                            ('xt_1', np.float32, 2048),
                             ('qt_1', np.float32, 7),
                             ('qdott_1', np.float32, 7),
                             ('xg', np.float32, 2048)])
