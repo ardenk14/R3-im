@@ -97,9 +97,9 @@ class SymFetch():
             mug_x = np.random.uniform(mug_x_lim[0], mug_x_lim[1], 1)
             mug_y = np.random.uniform(mug_y_lim[0], mug_y_lim[1], 1)
             if random_color:
-                urdf_file = np.random.choice(['./red_mug.urdf', './blue_mug.urdf', './dark_red_mug.urdf'])
+                urdf_file = np.random.choice(['./objects/red_mug.urdf', './objects/blue_mug.urdf', './objects/dark_red_mug.urdf'])
             else:
-                urdf_file = './red_mug.urdf'
+                urdf_file = './objects/red_mug.urdf'
             self.mugIds.append(p.loadURDF(urdf_file, (mug_x, mug_y, 0.6)))
             p.changeDynamics(self.mugIds[-1], -1, lateralFriction=0.5) #reduce friction for a bit more realistic sliding
 

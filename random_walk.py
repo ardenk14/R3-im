@@ -47,7 +47,7 @@ if __name__ == '__main__':
             data = np.zeros((n_samples, n_runs), dtype=step_dtype)
             
             for run_idx in range(n_runs):
-                fetch = SymFetch(gui=False)
+                fetch = SymFetch(gui=True)
                 fetch.generate_mugs(random_color=True)
                 
                 for _ in range(200):
