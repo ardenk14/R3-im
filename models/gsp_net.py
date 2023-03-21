@@ -9,15 +9,16 @@ class GSPNet(nn.Module):
     """
     """
 
-    def __init__(self, state_dim, action_dim, lr=1e-3):
+    def __init__(self, state_dim, joint_state_dim, action_dim, lr=1e-3):
         super().__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
+        self.joint_state_dim = joint_state_dim
         #self.loss_fcn = nn.MSELoss()
 
         # Action policy
         self.MLP1 =  nn.Sequential(
-          nn.Linear(2 * self.state_dim + action_dim, 256),
+          nn.Linear(2 * self.state_dim + self.joint_state_dim + self.action_dim, 256),
           nn.ReLU(),
           nn.Linear(256, 256),
           nn.ReLU(),
@@ -40,12 +41,12 @@ class GSPNet(nn.Module):
         params = list(self.MLP1.parameters()) + list(self.MLP2.parameters())
         self.optimizer = torch.optim.Adam(params, lr=lr)
 
-    def forward(self, state, goal, last_action):
+    def forward(self, state, joint_state, goal, last_action):
         """
         Forward pass through action predictor.
         Action policy network.
         """
-        inpt = torch.cat((state, goal, last_action), dim=-1)
+        inpt = torch.cat((state, joint_state, goal, last_action), dim=-1)
         pred_next_action = self.MLP1(inpt)
         return pred_next_action
     
@@ -66,11 +67,12 @@ class GSPNet(nn.Module):
             # TODO: extract data correctly
             state = data['state']
             goal = data['goal']
+            joint_state = data['joint_state']
             next_state = data['next_state']
             last_action = data['last_action']
             true_action = data['true_action']
 
-            inpt = torch.cat((state, goal, last_action), dim=-1)
+            inpt = torch.cat((state, joint_state, goal, last_action), dim=-1)
             pred_next_action = self.MLP1(inpt)
 
             inpt2 = torch.cat((state, pred_next_action), dim=-1)

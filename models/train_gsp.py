@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('data.npz')
+    trainloader = get_dataloader('./data/data.npz')
     print("train loader: ", trainloader)
 
     # Create model
     state_dim = 2048 # TODO: have dataloader function return these dimensions
     action_dim = 7
-    model = GSPNet(state_dim, action_dim)
+    joint_state_dim = 7
+    model = GSPNet(state_dim, joint_state_dim, action_dim)
 
     # Train forward model
     forward_only_losses = model.train_forward_only(trainloader, num_epochs=10)

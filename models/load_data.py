@@ -47,6 +47,7 @@ class FetchMotionDataset(Dataset):
         sample = {
             'state': None,
             'action': None,
+            'joint_state': None,
             'next_state': None,
             'last_action': None,
             'true_action': None,
@@ -61,6 +62,7 @@ class FetchMotionDataset(Dataset):
         sample = {
             'state': data_point['xt'],
             'next_state': data_point['xt_1'],
+            'joint_state': data_point['qt'],
             'last_action': data_point['at-1'],
             'true_action': data_point['at'],
             'goal': data_point['xt_1']
