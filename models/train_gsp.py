@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('./data/data.npz')
+    trainloader = get_dataloader('./data')
     print("train loader: ", trainloader)
 
     # Create model
@@ -17,10 +17,10 @@ if __name__ == '__main__':
     model = GSPNet(state_dim, joint_state_dim, action_dim)
 
     # Train forward model
-    forward_only_losses = model.train_forward_only(trainloader, num_epochs=10)
+    forward_only_losses = model.train_forward_only(trainloader, num_epochs=50)
 
     # Train full model
-    full_model_losses = model.train_full_model(trainloader, num_epochs=20)
+    full_model_losses = model.train_full_model(trainloader, num_epochs=100)
 
     # Save the model
     print("Saving...")

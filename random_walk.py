@@ -6,6 +6,7 @@ import numpy as np
 import random
 import cv2
 from sim_utils import SymFetch
+from tqdm import tqdm
 
 import torch
 from r3m import load_r3m
@@ -20,7 +21,7 @@ r3m.eval()
 r3m.to(device)
 
 if __name__ == '__main__':
-    for file_idx in range(5):
+    for file_idx in range(6, 11):
         with torch.no_grad():
             fps = 15.0
             n_samples = 150 #samples (states) per run
@@ -47,7 +48,7 @@ if __name__ == '__main__':
             data = np.zeros((n_samples, n_runs), dtype=step_dtype)
             
             for run_idx in range(n_runs):
-                fetch = SymFetch(gui=True)
+                fetch = SymFetch(gui=False)
                 fetch.generate_mugs(random_color=True)
                 
                 for _ in range(200):
@@ -59,7 +60,8 @@ if __name__ == '__main__':
                 prev_a = qdot
 
                 print('\n---------file {} run {}-------------\n'.format(file_idx+1, run_idx))
-                for i in range(n_samples):
+                pbar = tqdm(range(n_samples))
+                for i in pbar:
 
                     qdddot = (2*np.random.rand(7) - 1)*max_j #jerk
                     qddot += qdddot
@@ -92,5 +94,5 @@ if __name__ == '__main__':
                 time.sleep(1)
                 p.disconnect()
 
-            np.savez_compressed('data{}'.format(file_idx+1), data=data)
+            np.savez_compressed('data{}'.format(file_idx), data=data)
                 

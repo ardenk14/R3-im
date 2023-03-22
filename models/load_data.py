@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import os
 
 def get_dataloader(data_fp, batch_size=500):
     """
@@ -15,7 +16,7 @@ class FetchMotionDataset(Dataset):
     """
     """
 
-    def __init__(self, data_fp):
+    def __init__(self, data_folder):
         # This is how the data is setup
         """self.step_dtype = np.dtype([('xt', np.float32, 2048),
                             ('qt', np.float32, 7),
@@ -25,9 +26,27 @@ class FetchMotionDataset(Dataset):
                             ('qt_1', np.float32, 7),
                             ('qdott_1', np.float32, 7)])"""
         
-        self.data = np.load(data_fp)['data']
-        print("Data: ", self.data[0, 0]['at'])
-        self.trajectory_length = len(self.data)
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
+
+        self.data = None
+        for data_fp in os.listdir(data_folder):
+            if self.data is None:
+                self.data = np.load(os.path.join(data_folder, data_fp))['data']
+            else:
+                self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'], self.data), axis=1)
+            self.trajectory_length = len(self.data)
+
+        # move to tensors
+        self.xt = torch.tensor(self.data['xt'], device=self.device)
+        self.xt_1 = torch.tensor(self.data['xt_1'], device=self.device)
+        self.qt = torch.tensor(self.data['qt'], device=self.device)
+        self.at_1 = torch.tensor(self.data['at-1'], device=self.device)
+        self.at = torch.tensor(self.data['at'], device=self.device)
+
+        print(self.data.shape)
 
     def __len__(self):
         return len(self.data) * len(self.data[0]) #* self.trajectory_length
@@ -59,13 +78,22 @@ class FetchMotionDataset(Dataset):
         index = item % self.trajectory_length
         data_point = self.data[index, trial]
 
+        # sample = {
+        #     'state': torch.tensor(data_point['xt'], device = self.device),
+        #     'next_state': torch.tensor(data_point['xt_1'], device = self.device),
+        #     'joint_state': torch.tensor(data_point['qt'], device = self.device),
+        #     'last_action': torch.tensor(data_point['at-1'], device = self.device),
+        #     'true_action': torch.tensor(data_point['at'], device = self.device),
+        #     'goal': torch.tensor(data_point['xt_1'], device = self.device)
+        # }
         sample = {
-            'state': data_point['xt'],
-            'next_state': data_point['xt_1'],
-            'joint_state': data_point['qt'],
-            'last_action': data_point['at-1'],
-            'true_action': data_point['at'],
-            'goal': data_point['xt_1']
+            'state': self.xt[index, trial],
+            'next_state': self.xt_1[index, trial],
+            'joint_state': self.qt[index, trial],
+            'last_action': self.at_1[index, trial],
+            'true_action': self.at[index, trial],
+            'goal': self.xt_1[index, trial]
         }
+
 
         return sample

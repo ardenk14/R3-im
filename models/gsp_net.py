@@ -14,6 +14,10 @@ class GSPNet(nn.Module):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.joint_state_dim = joint_state_dim
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
         #self.loss_fcn = nn.MSELoss()
 
         # Action policy
@@ -26,6 +30,7 @@ class GSPNet(nn.Module):
           nn.ReLU(),
           nn.Linear(256, self.action_dim)
         )
+        self.MLP1.to(self.device)
 
         # Forward model
         self.MLP2 =  nn.Sequential(
@@ -37,6 +42,7 @@ class GSPNet(nn.Module):
           nn.ReLU(),
           nn.Linear(256, self.state_dim)
         )
+        self.MLP2.to(self.device)
 
         params = list(self.MLP1.parameters()) + list(self.MLP2.parameters())
         self.optimizer = torch.optim.Adam(params, lr=lr)
