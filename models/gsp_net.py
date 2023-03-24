@@ -9,11 +9,12 @@ class GSPNet(nn.Module):
     """
     """
 
-    def __init__(self, state_dim, joint_state_dim, action_dim, lr=1e-3):
+    def __init__(self, state_dim, joint_state_dim, action_dim, num_actions=5, lr=1e-3):
         super().__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.joint_state_dim = joint_state_dim
+        self.num_actions = num_actions
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
         else:
@@ -28,13 +29,13 @@ class GSPNet(nn.Module):
           nn.ReLU(),
           nn.Linear(256, 256),
           nn.ReLU(),
-          nn.Linear(256, self.action_dim)
+          nn.Linear(256, self.action_dim*num_actions)
         )
         self.MLP1.to(self.device)
 
         # Forward model
         self.MLP2 =  nn.Sequential(
-          nn.Linear(self.state_dim + action_dim, 256),
+          nn.Linear(self.state_dim + action_dim*num_actions, 256),
           nn.ReLU(),
           nn.Linear(256, 256),
           nn.ReLU(),

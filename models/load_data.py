@@ -16,7 +16,7 @@ class FetchMotionDataset(Dataset):
     """
     """
 
-    def __init__(self, data_folder):
+    def __init__(self, data_folder, num_actions=5):
         # This is how the data is setup
         """self.step_dtype = np.dtype([('xt', np.float32, 2048),
                             ('qt', np.float32, 7),
@@ -25,7 +25,8 @@ class FetchMotionDataset(Dataset):
                             ('xt_1', np.uint8, 2048),
                             ('qt_1', np.float32, 7),
                             ('qdott_1', np.float32, 7)])"""
-        
+        self.num_actions = num_actions
+
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
         else:
@@ -37,7 +38,10 @@ class FetchMotionDataset(Dataset):
                 self.data = np.load(os.path.join(data_folder, data_fp))['data']
             else:
                 self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'], self.data), axis=1)
-            self.trajectory_length = len(self.data)
+            
+            self.trajectory_length = self.data.shape[0]*self.num_actions # num inputs per run
+            for i in range(num_actions):
+                self.trajectory_length -= i
 
         # move to tensors
         self.xt = torch.tensor(self.data['xt'], device=self.device)
@@ -49,7 +53,9 @@ class FetchMotionDataset(Dataset):
         print(self.data.shape)
 
     def __len__(self):
-        return len(self.data) * len(self.data[0]) #* self.trajectory_length
+        num_samples, num_runs = self.data.shape
+        return num_runs * self.trajectory_length
+        # return len(self.data) * len(self.data[0]) #* self.trajectory_length
 
     def __iter__(self):
         for i in range(self.__len__()):
@@ -74,10 +80,21 @@ class FetchMotionDataset(Dataset):
         }
 
         # Get current item
-        trial = item // self.trajectory_length
-        index = item % self.trajectory_length
-        data_point = self.data[index, trial]
+        run = item // self.trajectory_length
+        index = (item - run * self.trajectory_length) // self.data.shape[0] #index in n samples
+        forward_steps = (item - run * self.trajectory_length) % self.num_actions
 
+        # account for the last few of each run that don't have 
+        idx_from_end = self.trajectory_length - item + run*self.trajectory_length - 1
+        nextras = self.num_actions*(self.num_actions-1)/2
+
+        if idx_from_end < nextras:
+            for i in range(1, self.num_actions):
+                if idx_from_end <= nextras - i*(i-1)/2 - 1:
+                    forward_steps = int(self.num_actions - 1 - i)
+                    sample_from_end = -self.num_actions + nextras - i*(i-1)/2 - idx_from_end
+                    index = int(self.data.shape[0] + sample_from_end)
+        
         # sample = {
         #     'state': torch.tensor(data_point['xt'], device = self.device),
         #     'next_state': torch.tensor(data_point['xt_1'], device = self.device),
@@ -86,13 +103,19 @@ class FetchMotionDataset(Dataset):
         #     'true_action': torch.tensor(data_point['at'], device = self.device),
         #     'goal': torch.tensor(data_point['xt_1'], device = self.device)
         # }
+        true_action = torch.zeros(self.num_actions, self.at.shape[-1], device=self.device)
+
+        for i in range(forward_steps+1):
+            true_action[i,:] = self.at[index+i, run]
+        true_action = true_action.reshape(-1)
+
         sample = {
-            'state': self.xt[index, trial],
-            'next_state': self.xt_1[index, trial],
-            'joint_state': self.qt[index, trial],
-            'last_action': self.at_1[index, trial],
-            'true_action': self.at[index, trial],
-            'goal': self.xt_1[index, trial]
+            'state': self.xt[index, run],
+            'next_state': self.xt_1[index+forward_steps, run],
+            'joint_state': self.qt[index, run],
+            'last_action': self.at_1[index, run],
+            'true_action': true_action,
+            'goal': self.xt_1[index, run]
         }
 
 
