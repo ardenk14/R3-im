@@ -56,7 +56,7 @@ class SymFetch():
                     self.upper_limits.append(jointInfo[9])
                     if self.upper_limits[-1] == -1:
                         self.upper_limits[-1] = 6.28
-                    # self.lower_limits.append(-3.14)
+                        self.lower_limits.append(-6.28)
                     self.rest_poses.append(p.getJointState(self.fetch, i)[0])
                     self.joint_damping.append(0)
 
@@ -64,8 +64,9 @@ class SymFetch():
                 # self.range_limits.append(0)
                 j += 1
         # print(j)
-        # print('low limits', self.lower_limits)
-        # print('high limits', self.upper_limits)
+        print('low limits', self.lower_limits)
+        print('high limits', self.upper_limits)
+        p.resetJointState(self.fetch, 12 ,1.3)
         # print('ranges', self.range_limits)
         # print('rest', self.rest_poses)
 
@@ -138,21 +139,21 @@ class SymFetch():
 
         #get mug position
         mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
-        # goal_pos = np.array(mug_pos)+[-0.2, 0.0, 0.2]
-        goal_pos = np.array(p.getLinkState(self.fetch, 16)[0])+ [-0.1, 0.0, 0]
+        goal_pos = np.array(mug_pos) + [0.0, 0.2, 0.0]
+        # goal_pos = np.array(p.getLinkState(self.fetch, 16)[0])+ [-0.1, 0.0, 0]
         close_enough = False
         iters=0
         # while (not close_enough) and (iters < 10):
-        goal_config = p.calculateInverseKinematics(self.fetch, 16, goal_pos,
+        goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
                                                 # p.getQuaternionFromEuler((0, 0, 0)),
                                                 lowerLimits=self.lower_limits,
                                                 upperLimits=self.upper_limits,
                                                 jointRanges=self.range_limits,
                                                 restPoses=self.rest_poses,
-                                                maxNumIterations=50,
-                                                jointDamping=self.joint_damping,
+                                                # maxNumIterations=50,
+                                                # jointDamping=self.joint_damping,
                                                 solver=p.IK_DLS)
-        # print('goal', goal_pos)
+        print('goal', goal_pos)
         # print(goal_config)
         
         numJoints = p.getNumJoints(self.fetch)
@@ -161,31 +162,20 @@ class SymFetch():
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
             if qIndex > -1:
-                # p.resetJointState(self.fetch,i,goal_config[qIndex-7])
-                # if j==2:
-                #     p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, force=1000, targetPosition=0.1, maxVelocity=0.5)
-                # else:
-                p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, force=1000, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
+                p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, force=1000, targetPosition=goal_config[qIndex-7], maxVelocity=1.0)
                 j += 1
-
-            iters += 1
-            diff = p.getLinkState(self.fetch, 17)[0] - goal_pos
-            if np.linalg.norm(diff) < 0.1:
-                close_enough = True
-
-        
-
-    def push_mug(self):
-        #get mug position
-        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
-        goal_pos = np.array(mug_pos)+[0.0, -0.5, 0.1]
+    
+    def move_to(self, goal_pos):
         goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
-                                                   p.getQuaternionFromEuler((0, 0, 0)),
-                                                   self.lower_limits,
-                                                   self.upper_limits,
-                                                   self.range_limits,
-                                                   self.rest_poses)
-        
+                                                # p.getQuaternionFromEuler((0, 0, 0)),
+                                                lowerLimits=self.lower_limits,
+                                                upperLimits=self.upper_limits,
+                                                jointRanges=self.range_limits,
+                                                restPoses=self.rest_poses,
+                                                # maxNumIterations=50,
+                                                # jointDamping=self.joint_damping,
+                                                solver=p.IK_DLS)
+        print('goal', goal_pos)
         numJoints = p.getNumJoints(self.fetch)
         j = 0
         for i in range(numJoints):
@@ -193,9 +183,38 @@ class SymFetch():
             qIndex = jointInfo[3]
             if qIndex > -1:
                 # p.resetJointState(self.fetch,i,goal_config[qIndex-7])
-                if j==2:
-                    # p.resetJointState(self.fetch,i,0.3)
-                    p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
-                else:
-                    p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
+                # if j==2:
+                #     # p.resetJointState(self.fetch,i,0.3)
+                #     p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
+                # else:
+                p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
+                j += 1
+        
+
+    def push_mug(self):
+        #get mug position
+        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
+        goal_pos = np.array(mug_pos)+[0.0, -0.5, 0.0]
+        goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
+                                                # p.getQuaternionFromEuler((0, 0, 0)),
+                                                lowerLimits=self.lower_limits,
+                                                upperLimits=self.upper_limits,
+                                                jointRanges=self.range_limits,
+                                                restPoses=self.rest_poses,
+                                                # maxNumIterations=50,
+                                                # jointDamping=self.joint_damping,
+                                                solver=p.IK_DLS)
+        print('goal', goal_pos)
+        numJoints = p.getNumJoints(self.fetch)
+        j = 0
+        for i in range(numJoints):
+            jointInfo = p.getJointInfo(self.fetch, i)
+            qIndex = jointInfo[3]
+            if qIndex > -1:
+                # p.resetJointState(self.fetch,i,goal_config[qIndex-7])
+                # if j==2:
+                #     # p.resetJointState(self.fetch,i,0.3)
+                #     p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
+                # else:
+                p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
                 j += 1

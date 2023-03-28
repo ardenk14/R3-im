@@ -17,14 +17,19 @@ if __name__ == '__main__':
     fetch.generate_mugs(random_number=False, random_color=True) #generate one mug
     
     # fetch.move_to_mug()
-    fetch.set_arm_velocity([0,0,0,0,0,0,0])
+    # fetch.set_arm_velocity([0,0,0,0,0,0,0])
     # print('initial config', get_joint_angles())
 
-    for i in range(500):
-        if i%16==0:
-            fetch.get_image(True)
-        p.stepSimulation()
-        time.sleep(1./240.)
+    mug_x_lim = [0.7, 1.0] #limits for mug position
+    mug_y_lim = [-.5, .5]
+    for pt in [[0.7, -0.5, 0.6], [0.7, 0.5, 0.6], [1.0, -0.5, 0.6], [1.0, 0.5, 0.6]]:
+        fetch.move_to(pt)
+        for i in range(1000):
+            if i%16==0:
+                fetch.get_image(True)
+            p.stepSimulation()
+            time.sleep(1./240.)
+        print('end pos', p.getLinkState(fetch.fetch, 17)[0])
 
     # fetch.push_mug()
     # for i in range(500):

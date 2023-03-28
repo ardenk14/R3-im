@@ -43,7 +43,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="r_wheel_joint" type="continuous">
+  <joint name="r_wheel_joint" type="fixed">
     <origin rpy="-6.123E-17 0 0" xyz="0.0012914 -0.18738 0.055325" />
     <parent link="base_link" />
     <child link="r_wheel_link" />
@@ -71,7 +71,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="l_wheel_joint" type="continuous">
+  <joint name="l_wheel_joint" type="fixed">
     <origin rpy="-6.123E-17 0 0" xyz="0.0012914 0.18738 0.055325" />
     <parent link="base_link" />
     <child link="l_wheel_link" />
@@ -99,7 +99,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="torso_lift_joint" type="prismatic">
+  <joint name="torso_lift_joint" type="fixed">
     <origin rpy="-6.123E-17 0 0" xyz="-0.086875 0 0.37743" />
     <parent link="base_link" />
     <child link="torso_lift_link" />
@@ -128,7 +128,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="head_pan_joint" type="revolute">
+  <joint name="head_pan_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.053125 0 0.603001417713939" />
     <parent link="torso_lift_link" />
     <child link="head_pan_link" />
@@ -156,7 +156,7 @@
       </geometry>
     </collision>
   </link>
-  <joint name="head_tilt_joint" type="revolute">
+  <joint name="head_tilt_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0.14253 0 0.057999" />
     <parent link="head_pan_link" />
     <child link="head_tilt_link" />
@@ -221,7 +221,8 @@
     <child link="shoulder_lift_link" />
     <axis xyz="0 1 0" />
     <dynamics damping="1.0" />
-    <limit effort="131.76" lower="-1.221" upper="1.518" velocity="1.454" />
+    <!-- <limit effort="131.76" lower="-1.221" upper="1.518" velocity="1.454" /> -->
+    <limit effort="131.76" lower="-0.2" upper="0.1" velocity="1.454" />
   </joint>
   <link name="upperarm_roll_link">
     <inertial>
@@ -245,14 +246,24 @@
       </geometry>
     </collision>
   </link>
-  <joint name="upperarm_roll_joint" type="continuous">
+  <!-- <joint name="upperarm_roll_joint" type="continuous">
     <origin rpy="0 0 0" xyz="0.219 0 0" />
     <parent link="shoulder_lift_link" />
     <child link="upperarm_roll_link" />
     <axis xyz="1 0 0" />
     <dynamics damping="5.0" />
     <limit effort="76.94" velocity="1.571" />
+  </joint> -->
+
+  <joint name="upperarm_roll_joint" type="revolute">
+    <origin rpy="0 0 0" xyz="0.219 0 0" />
+    <parent link="shoulder_lift_link" />
+    <child link="upperarm_roll_link" />
+    <axis xyz="1 0 0" />
+    <dynamics damping="5.0" />
+    <limit effort="76.94" velocity="1.571" upper="1.7" lower="1.3"/>
   </joint>
+
   <link name="elbow_flex_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0.1279 0.0073 0.0000" />
@@ -342,6 +353,7 @@
     <axis xyz="0 1 0" />
     <dynamics damping="1.0" />
     <limit effort="25.7" lower="-2.16" upper="2.16" velocity="2.268" />
+    <!-- <limit effort="25.7" lower="-2.16" upper="0" velocity="2.268" /> -->
   </joint>
   <link name="wrist_roll_link">
     <inertial>
