@@ -19,20 +19,19 @@ class SymFetch():
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
         p.setGravity(0,0,-9.81)
         planeId = p.loadURDF("plane.urdf")
-        tableId = p.loadURDF("table/table.urdf", (1, 0, 0), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
+        tableId = p.loadURDF("table/table.urdf", (1, 0, -0.3), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
         self.mugIds = []
 
-        self.fetch = p.loadURDF("fetch_description/robots/fetch_obj.urdf")#, start_pos, start_orientation)
+        self.fetch = p.loadURDF("fetch_description/robots/fetch_obj.urdf", useFixedBase=1)#, start_pos, start_orientation)
         self.arm_joints = [x for x in range(10,17)]
 
         #lock down fetch base and torso lift
-        torso_pos = p.getLinkState(self.fetch, 4)[0]
-        p.createConstraint(self.fetch, -1, -1, -1, p.JOINT_FIXED, [0,0,0],[0,0,0],[0,0,0])
-        p.createConstraint(self.fetch, 4, -1, -1, p.JOINT_FIXED, [0,0,0], [0,0,0], torso_pos)
+        # torso_pos = p.getLinkState(self.fetch, 4)[0]
+        # p.createConstraint(self.fetch, -1, -1, -1, p.JOINT_FIXED, [0,0,0],[0,0,0],[0,0,0])
+        # p.createConstraint(self.fetch, 4, -1, -1, p.JOINT_FIXED, [0,0,0], [0,0,0], torso_pos)
 
         #set joint limits
         numJoints = p.getNumJoints(self.fetch)
-        nLimits = 16
         self.lower_limits = []
         self.upper_limits = []
         self.range_limits = []
@@ -42,30 +41,21 @@ class SymFetch():
         for i in range(numJoints):
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
-            # print(jointInfo)
+            print(jointInfo)
             if qIndex > -1:
-                if jointInfo[1] == b'torso_lift_joint':
-                    # tpos = p.getJointState(self.fetch, i)[0]
-                    self.lower_limits.append(0.0)
-                    self.upper_limits.append(0.1)
-                    self.rest_poses.append(0.0)
-                    self.joint_damping.append(1000000)
-                    # self.range_limits.append(0)
-                else:
-                    self.lower_limits.append(jointInfo[8])
-                    self.upper_limits.append(jointInfo[9])
-                    if self.upper_limits[-1] == -1:
-                        self.upper_limits[-1] = 6.28
-                        self.lower_limits.append(-6.28)
-                    self.rest_poses.append(p.getJointState(self.fetch, i)[0])
-                    self.joint_damping.append(0)
+                self.lower_limits.append(jointInfo[8])
+                self.upper_limits.append(jointInfo[9])
+                if self.upper_limits[-1] == -1:
+                    self.upper_limits[-1] = 6.28
+                    self.lower_limits.append(-6.28)
+                self.rest_poses.append(p.getJointState(self.fetch, i)[0])
+                self.joint_damping.append(0)
 
                 self.range_limits.append(self.upper_limits[-1] - self.lower_limits[-1])
                 # self.range_limits.append(0)
                 j += 1
-        # print(j)
-        print('low limits', self.lower_limits)
-        print('high limits', self.upper_limits)
+        # print('low limits', self.lower_limits)
+        # print('high limits', self.upper_limits)
         p.resetJointState(self.fetch, 12 ,1.3)
         # print('ranges', self.range_limits)
         # print('rest', self.rest_poses)
@@ -86,7 +76,7 @@ class SymFetch():
         self.projection_matrix = p.computeProjectionMatrixFOV(self.cam_fov, self.img_aspect, self.dpth_near, self.dpth_far)
 
     def generate_mugs(self, random_number=True, random_color=False):
-        mug_x_lim = [0.7, 1.0] #limits for mug position
+        mug_x_lim = [0.6,0.7]#[0.7, 1.0] #limits for mug position
         mug_y_lim = [-.5, .5]
 
         if random_number:
@@ -101,7 +91,7 @@ class SymFetch():
                 urdf_file = np.random.choice(['./objects/red_mug.urdf', './objects/blue_mug.urdf', './objects/dark_red_mug.urdf'])
             else:
                 urdf_file = './objects/red_mug.urdf'
-            self.mugIds.append(p.loadURDF(urdf_file, (mug_x, mug_y, 0.6)))
+            self.mugIds.append(p.loadURDF(urdf_file, (mug_x, mug_y, 0.3)))
             p.changeDynamics(self.mugIds[-1], -1, lateralFriction=0.5) #reduce friction for a bit more realistic sliding
 
     def get_image(self, resize=False):
@@ -134,87 +124,52 @@ class SymFetch():
         states = p.getJointStates(self.fetch, self.arm_joints)
         q = [state[1] for state in states]
         return q
-    
-    def move_to_mug(self): #super janky rn
 
-        #get mug position
-        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
-        goal_pos = np.array(mug_pos) + [0.0, 0.2, 0.0]
-        # goal_pos = np.array(p.getLinkState(self.fetch, 16)[0])+ [-0.1, 0.0, 0]
-        close_enough = False
-        iters=0
-        # while (not close_enough) and (iters < 10):
-        goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
-                                                # p.getQuaternionFromEuler((0, 0, 0)),
-                                                lowerLimits=self.lower_limits,
-                                                upperLimits=self.upper_limits,
-                                                jointRanges=self.range_limits,
-                                                restPoses=self.rest_poses,
-                                                # maxNumIterations=50,
-                                                # jointDamping=self.joint_damping,
-                                                solver=p.IK_DLS)
-        print('goal', goal_pos)
-        # print(goal_config)
-        
-        numJoints = p.getNumJoints(self.fetch)
-        j = 0
-        for i in range(numJoints):
-            jointInfo = p.getJointInfo(self.fetch, i)
-            qIndex = jointInfo[3]
-            if qIndex > -1:
-                p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, force=1000, targetPosition=goal_config[qIndex-7], maxVelocity=1.0)
-                j += 1
+    def get_ee_pos(self):
+        return p.getLinkState(self.fetch, 17)[0]
     
     def move_to(self, goal_pos):
         goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
-                                                # p.getQuaternionFromEuler((0, 0, 0)),
+                                                p.getQuaternionFromEuler((0, 1.57, 0)),
                                                 lowerLimits=self.lower_limits,
                                                 upperLimits=self.upper_limits,
                                                 jointRanges=self.range_limits,
                                                 restPoses=self.rest_poses,
-                                                # maxNumIterations=50,
+                                                maxNumIterations=50,
                                                 # jointDamping=self.joint_damping,
                                                 solver=p.IK_DLS)
-        print('goal', goal_pos)
         numJoints = p.getNumJoints(self.fetch)
         j = 0
         for i in range(numJoints):
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
             if qIndex > -1:
-                # p.resetJointState(self.fetch,i,goal_config[qIndex-7])
-                # if j==2:
-                #     # p.resetJointState(self.fetch,i,0.3)
-                #     p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
-                # else:
                 p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
                 j += 1
         
+    def move_to_mug(self, move_above=False):
+        #get mug position
+        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
+        if mug_pos[1] > 0:
+            goal_pos = np.array(mug_pos) #+ [0.1, 0.2, 0.0]
+        else: 
+            goal_pos = np.array(mug_pos) #+ [0.1, -0.2, 0.0]
+        # goal_pos = np.array(p.getLinkState(self.fetch, 16)[0])+ [-0.1, 0.0, 0]
+        if move_above:
+            goal_pos[2] += 0.1
+        else:
+            goal_pos[2] += 0.03
+        print('goal', goal_pos)
+        self.move_to(goal_pos)
+    
 
     def push_mug(self):
         #get mug position
         mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
-        goal_pos = np.array(mug_pos)+[0.0, -0.5, 0.0]
-        goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
-                                                # p.getQuaternionFromEuler((0, 0, 0)),
-                                                lowerLimits=self.lower_limits,
-                                                upperLimits=self.upper_limits,
-                                                jointRanges=self.range_limits,
-                                                restPoses=self.rest_poses,
-                                                # maxNumIterations=50,
-                                                # jointDamping=self.joint_damping,
-                                                solver=p.IK_DLS)
+        if mug_pos[1] > 0:
+            goal_pos = np.array(mug_pos) + [0.1, -0.4, 0.0]
+        else: 
+            goal_pos = np.array(mug_pos) + [0.1, 0.4, 0.0]
+        goal_pos[1] = 0
         print('goal', goal_pos)
-        numJoints = p.getNumJoints(self.fetch)
-        j = 0
-        for i in range(numJoints):
-            jointInfo = p.getJointInfo(self.fetch, i)
-            qIndex = jointInfo[3]
-            if qIndex > -1:
-                # p.resetJointState(self.fetch,i,goal_config[qIndex-7])
-                # if j==2:
-                #     # p.resetJointState(self.fetch,i,0.3)
-                #     p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=0, maxVelocity=0.5)
-                # else:
-                p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
-                j += 1
+        self.move_to(goal_pos)

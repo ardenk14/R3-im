@@ -21,7 +21,7 @@ r3m.eval()
 r3m.to(device)
 
 if __name__ == '__main__':
-    for file_idx in range(6, 11):
+    for file_idx in range(11,12):
         with torch.no_grad():
             fps = 15.0
             n_samples = 150 #samples (states) per run
@@ -48,7 +48,7 @@ if __name__ == '__main__':
             data = np.zeros((n_samples, n_runs), dtype=step_dtype)
             
             for run_idx in range(n_runs):
-                fetch = SymFetch(gui=False)
+                fetch = SymFetch(gui=True)
                 fetch.generate_mugs(random_color=True)
                 
                 for _ in range(200):
