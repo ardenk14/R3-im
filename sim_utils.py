@@ -20,15 +20,11 @@ class SymFetch():
         p.setGravity(0,0,-9.81)
         planeId = p.loadURDF("plane.urdf")
         tableId = p.loadURDF("table/table.urdf", (1, 0, -0.3), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
-        self.mugIds = []
+        self.blockIds = []
 
         self.fetch = p.loadURDF("fetch_description/robots/fetch_obj.urdf", useFixedBase=1)#, start_pos, start_orientation)
         self.arm_joints = [x for x in range(10,17)]
-
-        #lock down fetch base and torso lift
-        # torso_pos = p.getLinkState(self.fetch, 4)[0]
-        # p.createConstraint(self.fetch, -1, -1, -1, p.JOINT_FIXED, [0,0,0],[0,0,0],[0,0,0])
-        # p.createConstraint(self.fetch, 4, -1, -1, p.JOINT_FIXED, [0,0,0], [0,0,0], torso_pos)
+        self.gripper_open = True
 
         #set joint limits
         numJoints = p.getNumJoints(self.fetch)
@@ -52,7 +48,6 @@ class SymFetch():
                 self.joint_damping.append(0)
 
                 self.range_limits.append(self.upper_limits[-1] - self.lower_limits[-1])
-                # self.range_limits.append(0)
                 j += 1
         # print('low limits', self.lower_limits)
         # print('high limits', self.upper_limits)
@@ -75,9 +70,9 @@ class SymFetch():
         # Camera intrinsics
         self.projection_matrix = p.computeProjectionMatrixFOV(self.cam_fov, self.img_aspect, self.dpth_near, self.dpth_far)
 
-    def generate_mugs(self, random_number=True, random_color=False):
-        mug_x_lim = [0.6,0.7]#[0.7, 1.0] #limits for mug position
-        mug_y_lim = [-.5, .5]
+    def generate_blocks(self, random_number=True, random_color=False):
+        block_x_lim = [0.55,0.75]#[0.7, 1.0] #limits for mug position
+        block_y_lim = [-.4, .4]
 
         if random_number:
             num_mugs = np.random.randint(1,15)
@@ -85,14 +80,14 @@ class SymFetch():
             num_mugs = 1
 
         for _ in range(num_mugs):
-            mug_x = np.random.uniform(mug_x_lim[0], mug_x_lim[1], 1)
-            mug_y = np.random.uniform(mug_y_lim[0], mug_y_lim[1], 1)
+            mug_x = np.random.uniform(block_x_lim[0], block_x_lim[1], 1)
+            mug_y = np.random.uniform(block_y_lim[0], block_y_lim[1], 1)
             if random_color:
-                urdf_file = np.random.choice(['./objects/red_mug.urdf', './objects/blue_mug.urdf', './objects/dark_red_mug.urdf'])
+                urdf_file = np.random.choice(['./objects/red_block.urdf', './objects/blue_block.urdf', './objects/green_block.urdf'])
             else:
-                urdf_file = './objects/red_mug.urdf'
-            self.mugIds.append(p.loadURDF(urdf_file, (mug_x, mug_y, 0.3)))
-            p.changeDynamics(self.mugIds[-1], -1, lateralFriction=0.5) #reduce friction for a bit more realistic sliding
+                urdf_file = './objects/red_block.urdf'
+            self.blockIds.append(p.loadURDF(urdf_file, (mug_x, mug_y, 0.3)))
+            # p.changeDynamics(self.mugIds[-1], -1, lateralFriction=0.5) #reduce friction for a bit more realistic sliding
 
     def get_image(self, resize=False):
         # Get rgb, depth, and segmentation images
@@ -114,6 +109,16 @@ class SymFetch():
         # qdot is shape (7,)
         forces = np.ones(len(self.arm_joints)) * 1000
         p.setJointMotorControlArray(self.fetch, self.arm_joints, p.VELOCITY_CONTROL, targetVelocities = qdot, forces=forces)
+
+    def set_gripper(self, open=None):
+        if open is not None:
+            self.gripper_open = open
+        if self.gripper_open:
+            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=10)
+            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=10)
+        else:
+            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=10)
+            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=10)
 
     def get_joint_angles(self):
         states = p.getJointStates(self.fetch, self.arm_joints)
@@ -143,13 +148,13 @@ class SymFetch():
         for i in range(numJoints):
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
-            if qIndex > -1:
+            if qIndex > -1 and i!=18 and i!=19:
                 p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
                 j += 1
         
-    def move_to_mug(self, move_above=False):
+    def move_to_block(self, move_above=False):
         #get mug position
-        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
+        mug_pos = p.getBasePositionAndOrientation(self.blockIds[0], 0)[0]
         if mug_pos[1] > 0:
             goal_pos = np.array(mug_pos) #+ [0.1, 0.2, 0.0]
         else: 
@@ -158,18 +163,6 @@ class SymFetch():
         if move_above:
             goal_pos[2] += 0.1
         else:
-            goal_pos[2] += 0.03
-        print('goal', goal_pos)
-        self.move_to(goal_pos)
-    
-
-    def push_mug(self):
-        #get mug position
-        mug_pos = p.getBasePositionAndOrientation(self.mugIds[0], 0)[0]
-        if mug_pos[1] > 0:
-            goal_pos = np.array(mug_pos) + [0.1, -0.4, 0.0]
-        else: 
-            goal_pos = np.array(mug_pos) + [0.1, 0.4, 0.0]
-        goal_pos[1] = 0
+            goal_pos[2] += 0.0
         print('goal', goal_pos)
         self.move_to(goal_pos)

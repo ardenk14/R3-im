@@ -222,7 +222,7 @@
     <axis xyz="0 1 0" />
     <dynamics damping="1.0" />
     <!-- <limit effort="131.76" lower="-1.221" upper="1.518" velocity="1.454" /> -->
-    <limit effort="131.76" lower="-0.2" upper="0.1" velocity="1.454" />
+    <limit effort="131.76" lower="-0.5" upper="1.518" velocity="1.454" />
   </joint>
   <link name="upperarm_roll_link">
     <inertial>

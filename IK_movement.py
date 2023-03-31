@@ -14,42 +14,50 @@ def get_joint_angles():
 
 if __name__ == '__main__':
     fetch = SymFetch()
-    fetch.generate_mugs(random_number=False, random_color=True) #generate one mug
+    fetch.generate_blocks(random_number=False, random_color=True) #generate one block
     
     for _ in range(20):
-        fetch.move_to_mug(move_above=True)
+        fetch.move_to_block(move_above=True)
         for i in range(50):
             if i%16==0:
                 fetch.get_image(True)
             p.stepSimulation()
             time.sleep(1./240.)
-        print(fetch.get_ee_pos())
     
-    for _ in range(3):
-        fetch.move_to_mug()
-        for i in range(50):
-            if i%16==0:
-                fetch.get_image(True)
-            p.stepSimulation()
-            time.sleep(1./240.)
-        print(fetch.get_ee_pos())
-    # mug_x_lim = [0.7, 1.0] #limits for mug position
-    # mug_y_lim = [-.5, .5]
-    # for pt in [[0.7, -0.5, 0.6], [0.7, 0.5, 0.6], [1.0, -0.5, 0.6], [1.0, 0.5, 0.6]]:
-    #     fetch.move_to(pt)
-    #     for i in range(1000):
-    #         if i%16==0:
-    #             fetch.get_image(True)
-    #         p.stepSimulation()
-    #         time.sleep(1./240.)
-    #     print('end pos', p.getLinkState(fetch.fetch, 17)[0])
-
-    fetch.push_mug()
-    for i in range(500):
+    fetch.set_gripper(open=True)
+    for i in range(100):
         if i%16==0:
             fetch.get_image(True)
         p.stepSimulation()
         time.sleep(1./240.)
+
+    
+    for _ in range(3):
+        fetch.move_to_block()
+        for i in range(50):
+            if i%16==0:
+                fetch.get_image(True)
+            p.stepSimulation()
+            time.sleep(1./240.)
+    
+    #pick up the block
+    fetch.set_gripper(open=False)
+    for i in range(100):
+        if i%16==0:
+            fetch.get_image(True)
+        p.stepSimulation()
+        time.sleep(1./240.)
+
+    pos = fetch.get_ee_pos()
+    pos = np.array(pos) + [0.0, 0.0, 0.1]
+
+    for _ in range(10):
+        fetch.move_to(pos)
+        for i in range(50):
+            if i%16==0:
+                fetch.get_image(True)
+            p.stepSimulation()
+            time.sleep(1./240.)
 
     print('end pos', p.getLinkState(fetch.fetch, 17)[0])
     time.sleep(10)
