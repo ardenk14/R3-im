@@ -17,6 +17,7 @@ class SymFetch():
 
         # Upload each link
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
+        print(pybullet_data.getDataPath())
         p.setGravity(0,0,-9.81)
         planeId = p.loadURDF("plane.urdf")
         tableId = p.loadURDF("table/table.urdf", (1, 0, -0.3), p.getQuaternionFromEuler((0, 0, 3.1415/2.0)))
@@ -164,5 +165,5 @@ class SymFetch():
             goal_pos[2] += 0.1
         else:
             goal_pos[2] += 0.0
-        print('goal', goal_pos)
+        # print('goal', goal_pos)
         self.move_to(goal_pos)
