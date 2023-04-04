@@ -11,8 +11,8 @@ if __name__ == '__main__':
     print("train loader: ", trainloader)
 
     # Create model
-    state_dim = 2048 # TODO: have dataloader function return these dimensions
-    action_dim = 7
+    state_dim = 2048 + 8 # TODO: have dataloader function return these dimensions
+    action_dim = 8
     model = BehaviorCloningModel(state_dim, action_dim)
 
     # Train forward model

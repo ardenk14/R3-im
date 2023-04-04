@@ -44,6 +44,7 @@ if __name__ == '__main__':
             # Get current state
             current_state = torch.from_numpy(fetch.get_joint_angles())
             bc_input[2048:] = current_state
+            bc_input[-1] = float(fetch.gripper_open)
 
             # Get output from policy
             output = model(bc_input).detach().cpu().numpy()
