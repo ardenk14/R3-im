@@ -1,5 +1,5 @@
 import torch
-from load_data import FetchMotionDataset, get_dataloader
+from single_step_dataloader import FetchMotionDataset, get_dataloader
 from behavior_cloning_net import BehaviorCloningModel
 import matplotlib.pyplot as plt
 
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('data.npz')
+    trainloader = get_dataloader('data/block_lift')
     print("train loader: ", trainloader)
 
     # Create model

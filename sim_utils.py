@@ -112,7 +112,7 @@ class SymFetch():
         p.setJointMotorControlArray(self.fetch, self.arm_joints, p.VELOCITY_CONTROL, targetVelocities = qdot, forces=forces)
 
     def set_joint_angles(self, q):
-        p.setJointMotorControlArray(self.fetch, self.arm_joints, p.POSITION_CONTROL, targetPositions = q, maxVelocity = 0.5)
+        p.setJointMotorControlArray(self.fetch, self.arm_joints, p.POSITION_CONTROL, targetPositions = q)
 
     def set_gripper(self, open=None):
         if open is not None:
@@ -126,12 +126,12 @@ class SymFetch():
 
     def get_joint_angles(self):
         states = p.getJointStates(self.fetch, self.arm_joints)
-        q = [state[0] for state in states]
+        q = np.array([state[0] for state in states])
         return q
     
     def get_joint_vel(self):
         states = p.getJointStates(self.fetch, self.arm_joints)
-        q = [state[1] for state in states]
+        q = np.array([state[1] for state in states])
         return q
 
     def get_ee_pos(self):

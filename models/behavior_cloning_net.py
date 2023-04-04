@@ -14,6 +14,10 @@ class BehaviorCloningModel(nn.Module):
         self.state_dim = state_dim
         self.action_dim = action_dim
         #self.loss_fcn = nn.MSELoss()
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
 
         self.model =  nn.Sequential(
           nn.Linear(self.state_dim, 256),
@@ -23,7 +27,7 @@ class BehaviorCloningModel(nn.Module):
           nn.Linear(256, 256),
           nn.ReLU(),
           nn.Linear(256, self.action_dim)
-        )
+        ).to(self.device)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
 
