@@ -48,8 +48,11 @@ class BehaviorCloningModel(nn.Module):
             self.optimizer.zero_grad()
 
             # TODO: extract data correctly
-            state = data['state']
+            r3m_state = data['state']
+            joint_state = data['joint_state']
             action = data['true_action']
+
+            state = torch.cat((r3m_state, joint_state), dim=-1)
 
             pred_action = self.model(state)
             loss = F.mse_loss(pred_action, action) 
