@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
         print('end pos', p.getLinkState(fetch.fetch, 17)[0])
 
-        np.savez_compressed('data2', data=data)
+        np.savez_compressed('data13', data=data)
         time.sleep(10)
         p.disconnect()
 

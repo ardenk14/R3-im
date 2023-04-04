@@ -36,7 +36,7 @@ if __name__ == '__main__':
         bc_input = torch.zeros((state_dim), device=device)
 
         for i in range(2000):
-            if i%16==0:
+            if i%5==0:
                 print(i)
                 im = torch.tensor(fetch.get_image(True))
 
