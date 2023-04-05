@@ -59,7 +59,7 @@ class BehaviorCloningModel(nn.Module):
             state = torch.cat((r3m_state, joint_state), dim=-1)
 
             pred_action = self.model(state)
-            loss = F.mse_loss(pred_action, action) 
+            loss = F.l1_loss(pred_action, action) #mse_loss(pred_action, action) 
             loss.backward()
             self.optimizer.step()
 
