@@ -23,20 +23,20 @@ r3m.to(device)
 
 if __name__ == '__main__':
     with torch.no_grad():
-        fetch = SymFetch(random_init=True)
-        fetch.generate_blocks(random_number=False, random_color=True)
+        fetch = SymFetch(random_init=False)
+        fetch.generate_blocks(random_number=False, random_color=False, random_pos=False)
 
         state_dim = 2056 # 7 joints + 1 gripper + 2048 for R3M embedding
         action_dim = 8 # 7 joint position changes + gripper action 
 
         model = BehaviorCloningModel(state_dim, action_dim)
-        model.load_state_dict(torch.load('bc_model.pt'))
+        model.load_state_dict(torch.load('bc_simple_model.pt'))
         model.eval()
 
         bc_input = torch.zeros((state_dim), device=device)
 
         for i in range(2000):
-            if i%5==0:
+            if i%24==0:
                 print(i)
                 im = torch.tensor(fetch.get_image(True))
 
@@ -49,12 +49,14 @@ if __name__ == '__main__':
                 bc_input[-1] = float(fetch.gripper_open)
 
                 # Get output from policy
-                output = model(bc_input).detach().cpu().numpy()
+                output = model(bc_input.view(1,-1)).detach().cpu().numpy()
 
                 # Set robot commands from policy
-                pos = output[:7] +  current_state.numpy()
-                open_gripper = bool(round(output[-1]))
+                pos = output[0,:7] +  current_state.numpy()
+                # pos = output[:3] +  fetch.get_ee_pos()
+                open_gripper = bool(round(output[0,-1]))
                 fetch.set_joint_angles(pos)
+                # fetch.move_to(pos)
                 fetch.set_gripper(open=open_gripper)
             p.stepSimulation()
             time.sleep(1./240.)

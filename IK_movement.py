@@ -55,46 +55,55 @@ if __name__ == '__main__':
 
         r3m = load_r3m("resnet50")
         r3m.to(device)
+        r3m.eval()
 
         fps = 10
-        i = 0
         n_samples = 80
+        j = 10
+        while j < 20:
+            i = 0
+            fetch = SymFetch(gui=True, random_init=False)
+            fetch.generate_blocks(random_number=False, random_color=False, random_pos=False) #generate one block
+            
+            data = np.zeros(n_samples, dtype=step_dtype)
+            # move above the block
+            jitter = np.hstack((np.random.uniform(-0.08, 0.08, 2), np.random.uniform(-0.02, 0.02)))
+            for _ in range(40):
+                fetch.move_to_block(move_above=True, jitter=jitter)
+                i = step_sim(i, fps, fetch, data)
+            
+            # open gripper
+            fetch.set_gripper(open=True)
+            for _ in range(10):
+                fetch.move_to_block(move_above=True)
+                i = step_sim(i, fps, fetch, data)
 
-        fetch = SymFetch(random_init=True)
-        fetch.generate_blocks(random_number=False, random_color=True) #generate one block
-        
-        data = np.zeros(n_samples, dtype=step_dtype)
-        # move above the block
-        for _ in range(40):
-            fetch.move_to_block(move_above=True)
-            i = step_sim(i, fps, fetch, data)
-        
-        # open gripper
-        fetch.set_gripper(open=True)
-        for _ in range(10):
-            i = step_sim(i, fps, fetch, data)
+            # lower gripper
+            for _ in range(10):
+                fetch.move_to_block()
+                i = step_sim(i, fps, fetch, data)
+            
+            # close gripper
+            fetch.set_gripper(open=False)
+            for _ in range(10):
+                i = step_sim(i, fps, fetch, data)
 
-        # lower gripper
-        for _ in range(10):
-            fetch.move_to_block()
-            i = step_sim(i, fps, fetch, data)
-        
-        # close gripper
-        fetch.set_gripper(open=False)
-        for _ in range(10):
-            i = step_sim(i, fps, fetch, data)
+            pos = fetch.get_ee_pos()
+            pos = np.array(pos) + [0.0, 0.0, 0.1]
 
-        pos = fetch.get_ee_pos()
-        pos = np.array(pos) + [0.0, 0.0, 0.1]
+            # lift the block
+            for _ in range(10):
+                fetch.move_to(pos)
+                i = step_sim(i, fps, fetch, data)
 
-        # lift the block
-        for _ in range(10):
-            fetch.move_to(pos)
-            i = step_sim(i, fps, fetch, data)
 
-        print('end pos', p.getLinkState(fetch.fetch, 17)[0])
-
-        np.savez_compressed('rand_data10', data=data)
-        time.sleep(3)
-        p.disconnect()
+            block_pos = p.getBasePositionAndOrientation(fetch.blockIds[0], 0)[0]
+            if block_pos[2] > 0.4:
+                np.savez_compressed('simple_data{}'.format(j), data=data)
+                j += 1
+                print('\n\n-------------collected file', j, '--------------')
+            else:
+                print('\n\n failed')
+            time.sleep(3)
+            p.disconnect()
 

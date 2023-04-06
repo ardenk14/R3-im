@@ -56,7 +56,7 @@ class SymFetch():
         # print('rest', self.rest_poses)
         if random_init:
             for i, joint_idx in enumerate(self.arm_joints):
-                p.resetJointState(self.fetch, joint_idx, np.random.uniform(self.lower_limits[i]*0.3, self.upper_limits[i]*0.3))
+                p.resetJointState(self.fetch, joint_idx, np.random.uniform(self.lower_limits[i]*0.05, self.upper_limits[i]*0.05))
                 # p.resetJointState(self.fetch, joint_idx, np.random.uniform(-0.7, 0.7))
 
         p.resetJointState(self.fetch, 12 ,1.3)
@@ -77,7 +77,7 @@ class SymFetch():
         # Camera intrinsics
         self.projection_matrix = p.computeProjectionMatrixFOV(self.cam_fov, self.img_aspect, self.dpth_near, self.dpth_far)
 
-    def generate_blocks(self, random_number=True, random_color=False):
+    def generate_blocks(self, random_number=True, random_color=False, random_pos=True):
         block_x_lim = [0.55,0.75]#[0.7, 1.0] #limits for mug position
         block_y_lim = [-.4, .4]
 
@@ -87,8 +87,12 @@ class SymFetch():
             num_mugs = 1
 
         for _ in range(num_mugs):
-            mug_x = np.random.uniform(block_x_lim[0], block_x_lim[1], 1)
-            mug_y = np.random.uniform(block_y_lim[0], block_y_lim[1], 1)
+            if random_pos:
+                mug_x = np.random.uniform(block_x_lim[0], block_x_lim[1], 1)
+                mug_y = np.random.uniform(block_y_lim[0], block_y_lim[1], 1)
+            else:
+                mug_x = 0.65 + np.random.uniform(-0.01, 0.01)
+                mug_y = 0.3 + np.random.uniform(-0.01, 0.01)
             if random_color:
                 urdf_file = np.random.choice(['./objects/red_block.urdf', './objects/blue_block.urdf', './objects/green_block.urdf'])
             else:
@@ -162,7 +166,7 @@ class SymFetch():
                 p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
                 j += 1
         
-    def move_to_block(self, move_above=False):
+    def move_to_block(self, move_above=False, jitter=None):
         #get mug position
         mug_pos = p.getBasePositionAndOrientation(self.blockIds[0], 0)[0]
         if mug_pos[1] > 0:
@@ -174,5 +178,7 @@ class SymFetch():
             goal_pos[2] += 0.1
         else:
             goal_pos[2] += 0.0
+        if jitter is not None:
+            goal_pos += jitter
         # print('goal', goal_pos)
         self.move_to(goal_pos)

@@ -43,10 +43,12 @@ class FetchMotionDataset(Dataset):
 
         # move to tensors
         self.q1 = torch.tensor(self.data['q1'].copy(), device=self.device)
+        self.x1 = torch.tensor(self.data['x1'].copy(), device=self.device)
         self.r3m1 = torch.tensor(self.data['r3m1'].copy(), device=self.device)
         self.g1 = torch.tensor(self.data['g1'].copy(), device=self.device)
         self.q2 = torch.tensor(self.data['q2'].copy(), device=self.device)
         self.g2 = torch.tensor(self.data['g2'].copy(), device=self.device)
+        self.x2 = torch.tensor(self.data['x2'].copy(), device=self.device)
 
         print(self.data.shape)
 
@@ -85,6 +87,7 @@ class FetchMotionDataset(Dataset):
             'state': self.r3m1[index, run],
             'joint_state': torch.cat((self.q1[index, run], self.g1[index, run].reshape(-1))),
             'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
+            # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         }
 
         return sample
