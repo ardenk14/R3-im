@@ -37,7 +37,6 @@ class FetchMotionDataset(Dataset):
             if self.data is None:
                 self.data = np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1)
             else:
-                print(self.data.shape)
                 self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1), self.data), axis=1)
             
             self.trajectory_length = self.data.shape[0] # num inputs per run

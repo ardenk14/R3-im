@@ -8,7 +8,7 @@ import cv2
 
 class SymFetch():
 
-    def __init__(self, gui=True) -> None:
+    def __init__(self, gui=True, random_init=False) -> None:
         # Connect to pybullet physics engine
         if gui:
             physicsClient = p.connect(p.GUI)
@@ -38,7 +38,7 @@ class SymFetch():
         for i in range(numJoints):
             jointInfo = p.getJointInfo(self.fetch, i)
             qIndex = jointInfo[3]
-            print(jointInfo)
+            # print(jointInfo)
             if qIndex > -1:
                 self.lower_limits.append(jointInfo[8])
                 self.upper_limits.append(jointInfo[9])
@@ -52,9 +52,15 @@ class SymFetch():
                 j += 1
         # print('low limits', self.lower_limits)
         # print('high limits', self.upper_limits)
-        p.resetJointState(self.fetch, 12 ,1.3)
         # print('ranges', self.range_limits)
         # print('rest', self.rest_poses)
+        if random_init:
+            for i, joint_idx in enumerate(self.arm_joints):
+                p.resetJointState(self.fetch, joint_idx, np.random.uniform(self.lower_limits[i]*0.3, self.upper_limits[i]*0.3))
+                # p.resetJointState(self.fetch, joint_idx, np.random.uniform(-0.7, 0.7))
+
+        p.resetJointState(self.fetch, 12 ,1.3)
+
 
         # Set camera properties and positions
         self.img_width = 640

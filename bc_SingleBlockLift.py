@@ -23,7 +23,7 @@ r3m.to(device)
 
 if __name__ == '__main__':
     with torch.no_grad():
-        fetch = SymFetch()
+        fetch = SymFetch(random_init=True)
         fetch.generate_blocks(random_number=False, random_color=True)
 
         state_dim = 2056 # 7 joints + 1 gripper + 2048 for R3M embedding

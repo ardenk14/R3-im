@@ -60,7 +60,7 @@ if __name__ == '__main__':
         i = 0
         n_samples = 80
 
-        fetch = SymFetch()
+        fetch = SymFetch(random_init=True)
         fetch.generate_blocks(random_number=False, random_color=True) #generate one block
         
         data = np.zeros(n_samples, dtype=step_dtype)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
         print('end pos', p.getLinkState(fetch.fetch, 17)[0])
 
-        np.savez_compressed('data41', data=data)
-        time.sleep(10)
+        np.savez_compressed('rand_data10', data=data)
+        time.sleep(3)
         p.disconnect()
 
