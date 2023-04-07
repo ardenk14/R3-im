@@ -60,6 +60,7 @@ class SymFetch():
                 # p.resetJointState(self.fetch, joint_idx, np.random.uniform(-0.7, 0.7))
 
         p.resetJointState(self.fetch, 12 ,1.3)
+        self.set_gripper()
 
 
         # Set camera properties and positions
@@ -72,8 +73,9 @@ class SymFetch():
         self.dpth_far = 5
 
         # Camera extrinsics calulated by (position of camera (xyz), position of target (xyz), and up vector for the camera)
-        self.view_matrix = p.computeViewMatrix([0.15, 0, 1.05], [0.6, 0, 0.7], [0, 0, 1]) #NOTE: You can calculate the extrinsics with another function that takes position and euler angles
-        
+        # self.view_matrix = p.computeViewMatrix([0.15, 0, 1.05], [0.6, 0, 0.7], [0, 0, 1]) #NOTE: You can calculate the extrinsics with another function that takes position and euler angles
+        self.view_matrix = p.computeViewMatrix([1.2, 1.0, 0.8], [0.6, 0, 0.4], [0, 0, 1])
+
         # Camera intrinsics
         self.projection_matrix = p.computeProjectionMatrixFOV(self.cam_fov, self.img_aspect, self.dpth_near, self.dpth_far)
 
@@ -128,11 +130,11 @@ class SymFetch():
         if open is not None:
             self.gripper_open = open
         if self.gripper_open:
-            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=10)
-            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=10)
+            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=100)
+            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=100)
         else:
-            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=10)
-            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=10)
+            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=50)
+            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=50)
 
     def get_joint_angles(self):
         states = p.getJointStates(self.fetch, self.arm_joints)
@@ -146,6 +148,9 @@ class SymFetch():
 
     def get_ee_pos(self):
         return p.getLinkState(self.fetch, 17)[0]
+    
+    def get_gripper_state(self):
+        return p.getJointState(self.fetch, 18)[0]
     
     def move_to(self, goal_pos):
         goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
@@ -165,6 +170,8 @@ class SymFetch():
             if qIndex > -1 and i!=18 and i!=19:
                 p.setJointMotorControl2(self.fetch, i, p.POSITION_CONTROL, targetPosition=goal_config[qIndex-7], maxVelocity=0.5)
                 j += 1
+
+        return np.linalg.norm(goal_pos - self.get_ee_pos())
         
     def move_to_block(self, move_above=False, jitter=None):
         #get mug position
@@ -182,3 +189,5 @@ class SymFetch():
             goal_pos += jitter
         # print('goal', goal_pos)
         self.move_to(goal_pos)
+
+        return np.linalg.norm(goal_pos - self.get_ee_pos())

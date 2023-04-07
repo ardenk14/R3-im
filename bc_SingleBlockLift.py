@@ -35,9 +35,8 @@ if __name__ == '__main__':
 
         bc_input = torch.zeros((state_dim), device=device)
 
-        for i in range(2000):
+        for i in range(3000):
             if i%24==0:
-                print(i)
                 im = torch.tensor(fetch.get_image(True))
 
                 # Set inputs for policy: State (joint positions and velocities) and R3M embedding
@@ -46,7 +45,8 @@ if __name__ == '__main__':
                 # Get current state
                 current_state = torch.from_numpy(fetch.get_joint_angles())
                 bc_input[2048:-1] = current_state
-                bc_input[-1] = float(fetch.gripper_open)
+                # bc_input[-1] = float(fetch.gripper_open)
+                bc_input[-1] = fetch.get_gripper_state()
 
                 # Get output from policy
                 output = model(bc_input.view(1,-1)).detach().cpu().numpy()
@@ -58,6 +58,7 @@ if __name__ == '__main__':
                 fetch.set_joint_angles(pos)
                 # fetch.move_to(pos)
                 fetch.set_gripper(open=open_gripper)
+                print(i, open_gripper)
             p.stepSimulation()
             time.sleep(1./240.)
 

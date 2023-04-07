@@ -35,9 +35,10 @@ class FetchMotionDataset(Dataset):
         self.data = None
         for data_fp in os.listdir(data_folder):
             if self.data is None:
-                self.data = np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1)
+                self.data = np.load(os.path.join(data_folder, data_fp))['data']
             else:
-                self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1), self.data), axis=1)
+                # self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1), self.data), axis=1)
+                self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'], self.data))
             
             self.trajectory_length = self.data.shape[0] # num inputs per run
 
@@ -53,8 +54,9 @@ class FetchMotionDataset(Dataset):
         print(self.data.shape)
 
     def __len__(self):
-        num_samples, num_runs = self.data.shape
-        return num_runs * self.trajectory_length
+        # num_samples, num_runs = self.data.shape
+        # return num_runs * self.trajectory_length
+        return self.data.shape[0]
         # return len(self.data) * len(self.data[0]) #* self.trajectory_length
 
     def __iter__(self):
@@ -80,14 +82,20 @@ class FetchMotionDataset(Dataset):
         }
 
         # Get current item
-        run = item // self.trajectory_length
-        index = item % self.trajectory_length
+        # run = item // self.trajectory_length
+        # index = item % self.trajectory_length
+
+        # sample = {
+        #     'state': self.r3m1[index, run],
+        #     'joint_state': torch.cat((self.q1[index, run], self.g1[index, run].reshape(-1))),
+        #     'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
+        #     # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
+        # }
 
         sample = {
-            'state': self.r3m1[index, run],
-            'joint_state': torch.cat((self.q1[index, run], self.g1[index, run].reshape(-1))),
-            'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
+            'state': self.r3m1[item],
+            'joint_state': torch.cat((self.q1[item], self.g1[item].reshape(-1))),
+            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1)))
             # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         }
-
         return sample

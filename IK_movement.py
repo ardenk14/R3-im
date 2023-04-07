@@ -27,7 +27,7 @@ def collect_before_data(i, fetch: SymFetch, r3m, data):
     data[i]['q1'] = fetch.get_joint_angles()
     data[i]['qdot1'] = fetch.get_joint_vel()
     data[i]['x1'] = fetch.get_ee_pos()
-    data[i]['g1'] = fetch.gripper_open
+    data[i]['g1'] = fetch.get_gripper_state()
 
 def collect_after_data(i, fetch: SymFetch, r3m, data):
     data[i]['x2'] = fetch.get_ee_pos()
@@ -58,8 +58,8 @@ if __name__ == '__main__':
         r3m.eval()
 
         fps = 10
-        n_samples = 80
-        j = 10
+        n_samples = 200
+        j = 0
         while j < 20:
             i = 0
             fetch = SymFetch(gui=True, random_init=False)
@@ -67,39 +67,65 @@ if __name__ == '__main__':
             
             data = np.zeros(n_samples, dtype=step_dtype)
             # move above the block
-            jitter = np.hstack((np.random.uniform(-0.08, 0.08, 2), np.random.uniform(-0.02, 0.02)))
-            for _ in range(40):
-                fetch.move_to_block(move_above=True, jitter=jitter)
-                i = step_sim(i, fps, fetch, data)
-            
-            # open gripper
+            jitter = np.hstack((np.random.uniform(-0.1, 0.1, 2), np.random.uniform(-0.02, 0.02)))
             fetch.set_gripper(open=True)
-            for _ in range(10):
-                fetch.move_to_block(move_above=True)
+            # for _ in range(40):
+            dist = 1
+            k = 0
+            while dist > 0.1 and k < 40:
+                dist = fetch.move_to_block(move_above=True, jitter=jitter)
                 i = step_sim(i, fps, fetch, data)
+                print(dist)
+                k += 1
+            
+            dist = 1
+            k = 0
+            while dist > 0.095 and k < 40:
+                dist = fetch.move_to_block(move_above=True)
+                i = step_sim(i, fps, fetch, data)
+                k += 1
+                print(dist, fetch.get_gripper_state())
+
+            # open gripper
+            # for _ in range(10):
+            #     fetch.move_to_block(move_above=True)
+            #     i = step_sim(i, fps, fetch, data)
 
             # lower gripper
-            for _ in range(10):
-                fetch.move_to_block()
+            # for _ in range(10):
+            dist = 1
+            k = 0
+            while dist > 0.1 and k < 40:
+                dist = fetch.move_to_block()
                 i = step_sim(i, fps, fetch, data)
+                k += 1
+                print(dist)
             
             # close gripper
             fetch.set_gripper(open=False)
-            for _ in range(10):
+            for _ in range(7):
                 i = step_sim(i, fps, fetch, data)
+                print(dist, fetch.get_gripper_state())
 
             pos = fetch.get_ee_pos()
             pos = np.array(pos) + [0.0, 0.0, 0.1]
 
             # lift the block
-            for _ in range(10):
-                fetch.move_to(pos)
+            # for _ in range(10):
+            dist = 1
+            k = 0
+            while dist > 0.05 and k < 40:
+                dist = fetch.move_to(pos)
                 i = step_sim(i, fps, fetch, data)
+                print(dist)
+                k += 1
 
 
             block_pos = p.getBasePositionAndOrientation(fetch.blockIds[0], 0)[0]
             if block_pos[2] > 0.4:
-                np.savez_compressed('simple_data{}'.format(j), data=data)
+                data = data[:i]
+                print(i)
+                np.savez_compressed('side_view_data{}'.format(j), data=data)
                 j += 1
                 print('\n\n-------------collected file', j, '--------------')
             else:

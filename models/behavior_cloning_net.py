@@ -9,7 +9,7 @@ class BehaviorCloningModel(nn.Module):
     """
     """
 
-    def __init__(self, state_dim, action_dim, lr=1e-3):
+    def __init__(self, state_dim, action_dim, lr=1e-4):
         super().__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -25,8 +25,8 @@ class BehaviorCloningModel(nn.Module):
           nn.ReLU(),
           nn.Linear(256, 256),
           nn.ReLU(),
-          nn.Linear(256, 256),
-          nn.ReLU(),
+        #   nn.Linear(256, 256),
+        #   nn.ReLU(),
           nn.Linear(256, self.action_dim)
         ).to(self.device)
 

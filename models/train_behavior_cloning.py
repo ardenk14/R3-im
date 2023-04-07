@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('data/simple', batch_size=8192)
+    trainloader = get_dataloader('data/side_view', batch_size=32)
     print("train loader: ", trainloader)
 
     # Create model
     state_dim = 2048 + 8 # TODO: have dataloader function return these dimensions
     action_dim = 8
     model = BehaviorCloningModel(state_dim, action_dim)
+    model.train()
 
     # Train forward model
     losses = model.train_model(trainloader, num_epochs=2000)
