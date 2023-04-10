@@ -130,11 +130,11 @@ class SymFetch():
         if open is not None:
             self.gripper_open = open
         if self.gripper_open:
-            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=100)
-            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=100)
+            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=50)
+            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.04, maxVelocity=0.1, force=50)
         else:
-            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=50)
-            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=50)
+            p.setJointMotorControl2(self.fetch, 18, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=30)
+            p.setJointMotorControl2(self.fetch, 19, p.POSITION_CONTROL, targetPosition=0.001, maxVelocity=0.1, force=30)
 
     def get_joint_angles(self):
         states = p.getJointStates(self.fetch, self.arm_joints)

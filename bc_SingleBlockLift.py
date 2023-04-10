@@ -30,7 +30,7 @@ if __name__ == '__main__':
         action_dim = 8 # 7 joint position changes + gripper action 
 
         model = BehaviorCloningModel(state_dim, action_dim)
-        model.load_state_dict(torch.load('bc_simple_model.pt'))
+        model.load_state_dict(torch.load('bc_model.pt'))
         model.eval()
 
         bc_input = torch.zeros((state_dim), device=device)

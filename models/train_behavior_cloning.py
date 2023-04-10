@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('data/side_view', batch_size=32)
+    trainloader = get_dataloader('data/side_2', batch_size=32)
     print("train loader: ", trainloader)
 
     # Create model
@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     # Save the model
     print("Saving...")
-    torch.save(model.state_dict(), 'bc_simple_model.pt')
+    torch.save(model.state_dict(), 'bc_model.pt')
     print("Saved at bc_model.pt")
 
     # Plot forward only losses

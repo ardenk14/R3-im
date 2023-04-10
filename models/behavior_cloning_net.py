@@ -20,7 +20,7 @@ class BehaviorCloningModel(nn.Module):
             self.device = torch.device('cpu')
 
         self.model =  nn.Sequential(
-        #   nn.BatchNorm1d(self.state_dim),
+          nn.BatchNorm1d(self.state_dim),
           nn.Linear(self.state_dim, 256),
           nn.ReLU(),
           nn.Linear(256, 256),

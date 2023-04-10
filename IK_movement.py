@@ -67,7 +67,7 @@ if __name__ == '__main__':
             
             data = np.zeros(n_samples, dtype=step_dtype)
             # move above the block
-            jitter = np.hstack((np.random.uniform(-0.1, 0.1, 2), np.random.uniform(-0.02, 0.02)))
+            jitter = np.hstack((np.random.uniform(-0.04, 0.04, 2), np.random.uniform(-0.02, 0.02)))
             fetch.set_gripper(open=True)
             # for _ in range(40):
             dist = 1
@@ -125,7 +125,7 @@ if __name__ == '__main__':
             if block_pos[2] > 0.4:
                 data = data[:i]
                 print(i)
-                np.savez_compressed('side_view_data{}'.format(j), data=data)
+                np.savez_compressed('side_2_data{}'.format(j), data=data)
                 j += 1
                 print('\n\n-------------collected file', j, '--------------')
             else:
