@@ -24,7 +24,7 @@ r3m.to(device)
 if __name__ == '__main__':
     with torch.no_grad():
         success = 0
-        attempts = 20
+        attempts = 10
         for j in range(attempts):
             fetch = SymFetch(random_init=False)
             fetch.generate_blocks(random_number=False, random_color=False, random_pos=False)
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             action_dim = 7 + 1 # 7 joint position changes + gripper action 
 
             model = BehaviorCloningModel(state_dim, action_dim)
-            model.load_state_dict(torch.load('bc_side_model.pt'))
+            model.load_state_dict(torch.load('bc_ego_model.pt'))
             model.eval()
 
             bc_input = torch.zeros((state_dim), device=device)

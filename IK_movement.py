@@ -125,7 +125,7 @@ if __name__ == '__main__':
             if block_pos[2] > 0.4:
                 data = data[:i]
                 print(i)
-                np.savez_compressed('side_data{}'.format(j), data=data)
+                np.savez_compressed('ego_data{}'.format(j), data=data)
                 j += 1
                 print('\n\n-------------collected file', j, '--------------')
             else:
