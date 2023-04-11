@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('data/side_2', batch_size=32)
+    trainloader = get_dataloader('data/side_view', batch_size=32)
     print("train loader: ", trainloader)
 
     # Create model
-    state_dim = 2048 + 8 # TODO: have dataloader function return these dimensions
+    state_dim = 2048 + 7 + 3 # TODO: have dataloader function return these dimensions
     action_dim = 8
     model = BehaviorCloningModel(state_dim, action_dim)
     model.train()
@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     # Save the model
     print("Saving...")
-    torch.save(model.state_dict(), 'bc_model.pt')
-    print("Saved at bc_model.pt")
+    torch.save(model.state_dict(), 'bc_side_model.pt')
+    print("Saved at bc_side_model.pt")
 
     # Plot forward only losses
     plt.plot([i for i in range(len(losses))], losses)

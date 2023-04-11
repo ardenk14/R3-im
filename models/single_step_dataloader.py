@@ -98,4 +98,5 @@ class FetchMotionDataset(Dataset):
             'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1)))
             # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         }
+        # print(sample['joint_state'].shape)
         return sample

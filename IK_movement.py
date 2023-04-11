@@ -12,7 +12,7 @@ from r3m import load_r3m
 step_dtype = np.dtype([('r3m1', np.float32, 2048),
                         ('q1', np.float32, 7),
                         ('qdot1', np.float32, 7),
-                        ('g1', np.bool_, 1),
+                        ('g1', np.float32, 3),
                         ('x1', np.float32, 3),
                         ('x2', np.float32, 3),
                         ('q2', np.float32, 7),
@@ -75,7 +75,7 @@ if __name__ == '__main__':
             while dist > 0.1 and k < 40:
                 dist = fetch.move_to_block(move_above=True, jitter=jitter)
                 i = step_sim(i, fps, fetch, data)
-                print(dist)
+                print(dist, fetch.get_gripper_state())
                 k += 1
             
             dist = 1
@@ -99,7 +99,7 @@ if __name__ == '__main__':
                 dist = fetch.move_to_block()
                 i = step_sim(i, fps, fetch, data)
                 k += 1
-                print(dist)
+                print(dist, fetch.get_gripper_state())
             
             # close gripper
             fetch.set_gripper(open=False)
@@ -117,7 +117,7 @@ if __name__ == '__main__':
             while dist > 0.05 and k < 40:
                 dist = fetch.move_to(pos)
                 i = step_sim(i, fps, fetch, data)
-                print(dist)
+                print(dist, fetch.get_gripper_state())
                 k += 1
 
 
@@ -125,7 +125,7 @@ if __name__ == '__main__':
             if block_pos[2] > 0.4:
                 data = data[:i]
                 print(i)
-                np.savez_compressed('side_2_data{}'.format(j), data=data)
+                np.savez_compressed('side_data{}'.format(j), data=data)
                 j += 1
                 print('\n\n-------------collected file', j, '--------------')
             else:

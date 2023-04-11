@@ -61,6 +61,8 @@ class SymFetch():
 
         p.resetJointState(self.fetch, 12 ,1.3)
         self.set_gripper()
+        p.enableJointForceTorqueSensor(self.fetch, 18, True)
+        p.enableJointForceTorqueSensor(self.fetch, 19, True)
 
 
         # Set camera properties and positions
@@ -150,7 +152,10 @@ class SymFetch():
         return p.getLinkState(self.fetch, 17)[0]
     
     def get_gripper_state(self):
-        return p.getJointState(self.fetch, 18)[0]
+        pos1 = np.array(p.getLinkState(self.fetch, 18)[0])
+        pos2 = np.array(p.getLinkState(self.fetch, 19)[0])
+        dist = np.linalg.norm(pos1-pos2)
+        return (dist, p.getJointState(self.fetch, 18)[2][1], p.getJointState(self.fetch, 19)[2][1])
     
     def move_to(self, goal_pos):
         goal_config = p.calculateInverseKinematics(self.fetch, 17, goal_pos,
