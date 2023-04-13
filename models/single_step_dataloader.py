@@ -46,6 +46,7 @@ class FetchMotionDataset(Dataset):
         self.q1 = torch.tensor(self.data['q1'].copy(), device=self.device)
         self.x1 = torch.tensor(self.data['x1'].copy(), device=self.device)
         self.r3m1 = torch.tensor(self.data['r3m1'].copy(), device=self.device)
+        self.r3m2 = torch.tensor(self.data['r3m1'].copy(), device=self.device)
         self.g1 = torch.tensor(self.data['g1'].copy(), device=self.device)
         self.q2 = torch.tensor(self.data['q2'].copy(), device=self.device)
         self.g2 = torch.tensor(self.data['g2'].copy(), device=self.device)
@@ -91,11 +92,18 @@ class FetchMotionDataset(Dataset):
         #     'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
         #     # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         # }
-
+        if item!=0:
+            last_action = torch.cat((self.q2[item-1] - self.q1[item-1], self.g2[item-1].reshape(-1)))
+        else:
+            last_action = self.q2.new_zeros(8)
         sample = {
             'state': self.r3m1[item],
             'joint_state': torch.cat((self.q1[item], self.g1[item].reshape(-1))),
-            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1)))
+            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1))),
+            'next_state': self.r3m2[item],
+            'goal': self.r3m2[item],
+
+            'last_action': last_action
             # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         }
         # print(sample['joint_state'].shape)

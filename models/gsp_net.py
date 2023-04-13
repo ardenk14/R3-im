@@ -23,6 +23,7 @@ class GSPNet(nn.Module):
 
         # Action policy
         self.MLP1 =  nn.Sequential(
+          nn.BatchNorm1d(2 * self.state_dim + self.joint_state_dim + self.action_dim),
           nn.Linear(2 * self.state_dim + self.joint_state_dim + self.action_dim, 256),
           nn.ReLU(),
           nn.Linear(256, 256),
@@ -35,6 +36,7 @@ class GSPNet(nn.Module):
 
         # Forward model
         self.MLP2 =  nn.Sequential(
+          nn.BatchNorm1d(self.state_dim + action_dim*num_actions),
           nn.Linear(self.state_dim + action_dim*num_actions, 256),
           nn.ReLU(),
           nn.Linear(256, 256),
