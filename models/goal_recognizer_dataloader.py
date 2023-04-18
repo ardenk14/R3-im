@@ -6,13 +6,13 @@ import os
 def get_dataloader(data_fp, batch_size=500):
     """
     """
-    d_set = FetchMotionDataset(data_fp)
+    d_set = GoalRecognizerDataset(data_fp)
     #print("DSET: ", len(d_set))
     
     train_loader = DataLoader(d_set, batch_size=batch_size)
     return train_loader
 
-class FetchMotionDataset(Dataset):
+class GoalRecognizerDataset(Dataset):
     """
     """
 
@@ -45,14 +45,8 @@ class FetchMotionDataset(Dataset):
             self.trajectory_length = self.data.shape[0] # num inputs per run
 
         # move to tensors
-        self.q1 = torch.tensor(self.data['q1'].copy(), device=self.device)
-        self.x1 = torch.tensor(self.data['x1'].copy(), device=self.device)
         self.r3m1 = torch.tensor(self.data['r3m1'].copy(), device=self.device)
         self.r3m2 = torch.tensor(self.data['r3m2'].copy(), device=self.device)
-        self.g1 = torch.tensor(self.data['g1'].copy(), device=self.device)
-        self.q2 = torch.tensor(self.data['q2'].copy(), device=self.device)
-        self.g2 = torch.tensor(self.data['g2'].copy(), device=self.device)
-        self.x2 = torch.tensor(self.data['x2'].copy(), device=self.device)
 
         print(self.data.shape)
 
@@ -74,39 +68,18 @@ class FetchMotionDataset(Dataset):
         :return: data sample corresponding to encoded as a dictionary with keys (state, action, next_state).
         The class description has more details about the format of this data sample.
         """
-        sample = {
-            'state': None,
-            'action': None,
-            'joint_state': None,
-            'next_state': None,
-            'last_action': None,
-            'true_action': None,
-            'goal': None
-        }
 
-        # Get current item
-        # run = item // self.trajectory_length
-        # index = item % self.trajectory_length
-
-        # sample = {
-        #     'state': self.r3m1[index, run],
-        #     'joint_state': torch.cat((self.q1[index, run], self.g1[index, run].reshape(-1))),
-        #     'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
-        #     # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
-        # }
-        if not item in self.start_idx:
-            last_action = torch.cat((self.q2[item-1] - self.q1[item-1], self.g2[item-1].reshape(-1)))
+        if np.random.random() > 0.9:
+            idx = (item + np.random.randint(-2,2)) % len(self.data)
+            close = True
         else:
-            last_action = self.q2.new_zeros(8)
-        sample = {
-            'state': self.r3m1[item],
-            'joint_state': torch.cat((self.q1[item], self.g1[item].reshape(-1))),
-            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1))),
-            'next_state': self.r3m2[item],
-            'goal': self.r3m2[item],
+            idx = (item + (-1)**np.random.randint(0,2) * np.random.randint(5,100)) % len(self.data)
+            close = False
 
-            'last_action': last_action
-            # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
+        sample = {
+            'state1': self.r3m1[item],
+            'state2': self.r3m2[idx],
+            'close': close
         }
-        # print(sample['joint_state'].shape)
+        
         return sample

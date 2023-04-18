@@ -40,7 +40,7 @@ def collect_after_data(i, fetch: SymFetch, r3m, data):
 def step_sim(i, fps, fetch, data):
     collect_before_data(i, fetch, r3m, data)
     for _ in range(int(240/fps)):
-        p.stepSimulation()
+        fetch.stepSimulation()
         time.sleep(1/240)
     collect_after_data(i, fetch, r3m, data)
     i = i+1
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         j = 0
         while j < 20:
             i = 0
-            fetch = SymFetch(gui=True, random_init=False)
+            fetch = SymFetch(gui=False, random_init=False)
             fetch.generate_blocks(random_number=False, random_color=False, random_pos=False) #generate one block
             
             data = np.zeros(n_samples, dtype=step_dtype)

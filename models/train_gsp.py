@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('./data/pick_place')
+    trainloader = get_dataloader('./data/gsp')
     print("train loader: ", trainloader)
 
     # Create model
