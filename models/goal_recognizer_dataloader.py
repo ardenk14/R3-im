@@ -47,6 +47,7 @@ class GoalRecognizerDataset(Dataset):
         # move to tensors
         self.r3m1 = torch.tensor(self.data['r3m1'].copy(), device=self.device)
         self.r3m2 = torch.tensor(self.data['r3m2'].copy(), device=self.device)
+        self.q1 = torch.tensor(self.data['q1'].copy(), device=self.device)
 
         print(self.data.shape)
 
@@ -69,15 +70,16 @@ class GoalRecognizerDataset(Dataset):
         The class description has more details about the format of this data sample.
         """
 
-        if np.random.random() > 0.9:
-            idx = (item + np.random.randint(-2,2)) % len(self.data)
+        if np.random.random() > 0.7:
+            idx = (item + np.random.randint(-1,2)) % len(self.data)
             close = True
         else:
-            idx = (item + (-1)**np.random.randint(0,2) * np.random.randint(5,100)) % len(self.data)
+            idx = (item + (-1)**np.random.randint(0,2) * np.random.randint(3,30)) % len(self.data)
             close = False
 
         sample = {
             'state1': self.r3m1[item],
+            'joint_state': self.q1[item],
             'state2': self.r3m2[idx],
             'close': close
         }

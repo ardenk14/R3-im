@@ -23,8 +23,8 @@ class GSPNet(nn.Module):
 
         # Action policy
         self.MLP1 =  nn.Sequential(
-          nn.BatchNorm1d(2 * self.state_dim + self.joint_state_dim + self.action_dim),
-          nn.Linear(2 * self.state_dim + self.joint_state_dim + self.action_dim, 256),
+          nn.BatchNorm1d(2 * self.state_dim + self.joint_state_dim + self.action_dim - 1), #last action is action dim-1
+          nn.Linear(2 * self.state_dim + self.joint_state_dim + self.action_dim - 1, 256),
           nn.ReLU(),
           nn.Linear(256, 256),
           nn.ReLU(),
@@ -78,7 +78,7 @@ class GSPNet(nn.Module):
             goal = data['goal']
             joint_state = data['joint_state']
             next_state = data['next_state']
-            last_action = data['last_action']
+            last_action = data['last_action'] #try with no last action
             true_action = data['true_action']
 
             inpt = torch.cat((state, joint_state, goal, last_action), dim=-1)

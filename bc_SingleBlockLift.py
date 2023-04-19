@@ -33,7 +33,7 @@ if __name__ == '__main__':
             action_dim = 7 + 1 # 7 joint position changes + gripper action 
 
             model = BehaviorCloningModel(state_dim, action_dim)
-            model.load_state_dict(torch.load('bc_ego_model.pt'))
+            model.load_state_dict(torch.load('bc_side_model.pt'))
             model.eval()
 
             bc_input = torch.zeros((state_dim), device=device)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                     # fetch.move_to(pos)
                     fetch.set_gripper(open=open_gripper)
                     print(i, open_gripper, bc_input[-3:])
-                p.stepSimulation()
+                fetch.stepSimulation()
 
                 block_pos = np.array(p.getBasePositionAndOrientation(fetch.blockIds[0], 0)[0])
                 finger_pos = np.array(p.getLinkState(fetch.fetch, 18)[0])
@@ -70,7 +70,7 @@ if __name__ == '__main__':
                     print("-----success!------")
                     break
                 time.sleep(1./240.)                
-            p.disconnect()
+            fetch.disconnect()
 
         print("-----------------------------")
         print("Successful {}/{} {} rate".format(success, attempts, success/attempts))

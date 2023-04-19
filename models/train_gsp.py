@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     #dataset = FetchMotionDataset('data.npz')
     #print("Dataset: ", dataset)
-    trainloader = get_dataloader('./data/gsp')
+    trainloader = get_dataloader('./data/gsp2')
     print("train loader: ", trainloader)
 
     # Create model
@@ -20,12 +20,12 @@ if __name__ == '__main__':
     forward_only_losses = model.train_forward_only(trainloader, num_epochs=50)
 
     # Train full model
-    full_model_losses = model.train_full_model(trainloader, num_epochs=100)
+    full_model_losses = model.train_full_model(trainloader, num_epochs=150)
 
     # Save the model
     print("Saving...")
-    torch.save(model.state_dict(), 'GSP_model.pt')
-    print("Saved at GSP_model.pt")
+    torch.save(model.state_dict(), 'GSP_model_long_horizon.pt')
+    print("Saved at GSP_model_long_horizon.pt")
 
     # Plot forward only losses
     plt.plot([i for i in range(len(forward_only_losses))], forward_only_losses)

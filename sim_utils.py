@@ -104,6 +104,10 @@ class SymFetch():
                 rand = 0.01
                 mug_x = 0.65 + np.random.uniform(-rand, rand)
                 mug_y = 0.3 + np.random.uniform(-rand, rand)
+
+                #FOR TESTING GSP
+                # mug_x = 0.7 + np.random.uniform(-rand, rand)
+                # mug_y = 0.2 + np.random.uniform(-rand, rand)
             if random_color:
                 urdf_file = np.random.choice(['./objects/red_block.urdf', './objects/blue_block.urdf', './objects/green_block.urdf'])
             else:
