@@ -9,7 +9,7 @@ import cv2
 
 class SymFetch():
 
-    def __init__(self, gui=True, random_init=True) -> None:
+    def __init__(self, gui=True, random_init=True, ego=False) -> None:
         # Connect to pybullet physics engine
         # if gui:
         #     physicsClient = p.connect(p.GUI)
@@ -81,13 +81,15 @@ class SymFetch():
         self.dpth_far = 5
 
         # Camera extrinsics calulated by (position of camera (xyz), position of target (xyz), and up vector for the camera)
-        # self.view_matrix = p.computeViewMatrix([0.15, 0, 1.05], [0.6, 0, 0.7], [0, 0, 1]) #NOTE: You can calculate the extrinsics with another function that takes position and euler angles
-        self.view_matrix = self._p.computeViewMatrix([1.2, 1.0, 0.8], [0.6, 0, 0.4], [0, 0, 1])
+        if ego:
+            self.view_matrix = p.computeViewMatrix([0.15, 0, 1.05], [0.6, 0, 0.7], [0, 0, 1]) #NOTE: You can calculate the extrinsics with another function that takes position and euler angles
+        else:
+            self.view_matrix = self._p.computeViewMatrix([1.2, 1.0, 0.8], [0.6, 0, 0.4], [0, 0, 1])
 
         # Camera intrinsics
         self.projection_matrix = self._p.computeProjectionMatrixFOV(self.cam_fov, self.img_aspect, self.dpth_near, self.dpth_far)
 
-    def generate_blocks(self, random_number=True, random_color=False, random_pos=True):
+    def generate_blocks(self, random_number=True, random_color=False, random_pos=True, rand = 0.01):
         block_x_lim = [0.6, 0.8]#[0.7, 1.0] #limits for mug position
         block_y_lim = [-.4, .4]
 
@@ -101,13 +103,12 @@ class SymFetch():
                 mug_x = np.random.uniform(block_x_lim[0], block_x_lim[1], 1)
                 mug_y = np.random.uniform(block_y_lim[0], block_y_lim[1], 1)
             else:
-                rand = 0.01
                 mug_x = 0.65 + np.random.uniform(-rand, rand)
                 mug_y = 0.3 + np.random.uniform(-rand, rand)
 
                 #FOR TESTING GSP
-                # mug_x = 0.7 + np.random.uniform(-rand, rand)
-                # mug_y = 0.2 + np.random.uniform(-rand, rand)
+                # mug_x = 0.65#+ np.random.uniform(-rand, rand)
+                # mug_y = 0.3# + np.random.uniform(-rand, rand)
             if random_color:
                 urdf_file = np.random.choice(['./objects/red_block.urdf', './objects/blue_block.urdf', './objects/green_block.urdf'])
             else:

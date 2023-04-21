@@ -9,6 +9,7 @@ import torch
 from sim_utils import SymFetch
 from models.gsp_net import GSPNet
 from models.goal_recognizer_net import GoalReconizerNet
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 import torch
 from r3m import load_r3m
@@ -53,21 +54,27 @@ if __name__ == '__main__':
                 time.sleep(1/240)
             k += 1
         
+
+        # fig = plt.figure()
+        # grid = ImageGrid(fig, 111, nrows_ncols=(2,len(goals)), axes_pad=0.01)
+        output_image = None
         i = 0
         try:
-            for goal_idx in range(len(goals)):
+            for row_idx, goal_idx in enumerate(range(len(goals))):
                 goal = r3m(torch.from_numpy(goals[goal_idx]['r3m']).to(device).permute(2,0,1).reshape(-1, 3, 224, 224))
                 goal_pos = goals[goal_idx]['x']
 
                 print('----goal {}-------'.format(goal_idx))
                 cv2.destroyAllWindows()
                 img = goals[goal_idx]['r3m'].astype(np.uint8)
+                # grid[row_idx].imshow(img)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 cv2.imshow('goal', img)
                 cv2.waitKey(1000)
 
                 gr_score = 0
-                while gr_score < 0.8:
+                i_max = i + 1000
+                while gr_score < 0.8 and i < i_max:
                     if i%24==0:
                         im = torch.tensor(fetch.get_image(True))
 
@@ -97,6 +104,19 @@ if __name__ == '__main__':
                     fetch.stepSimulation()
                     i+=1
                     time.sleep(1./240.)
-            time.sleep(5)
+                
+                # grid[row_idx + len(goals)].imshow(fetch.get_image(resize=True))
+                stacked_img = np.concatenate((img, cv2.cvtColor(fetch.get_image(resize=True), cv2.COLOR_RGB2BGR)), axis=0)
+
+                if output_image is None:
+                    output_image = stacked_img
+                else:
+                    output_image = np.concatenate((output_image, stacked_img), axis=1)
+
+            time.sleep(1)
         except KeyboardInterrupt as e:
             p.disconnect()
+
+        cv2.imshow('output', output_image)
+        cv2.imwrite('gsp_goals.png', output_image)
+        cv2.waitKey(0)

@@ -21,20 +21,13 @@ r3m = load_r3m("resnet50") # resnet18, resnet34
 r3m.eval()
 r3m.to(device)
 
-if __name__ == '__main__':
+
+def test_bc(attempts, model, state_dim, r3m, rand, ego=False):
     with torch.no_grad():
         success = 0
-        attempts = 10
         for j in range(attempts):
-            fetch = SymFetch(random_init=False)
-            fetch.generate_blocks(random_number=False, random_color=False, random_pos=False)
-
-            state_dim = 2048 + 7 + 3 # 7 joints + 1 gripper + 2048 for R3M embedding
-            action_dim = 7 + 1 # 7 joint position changes + gripper action 
-
-            model = BehaviorCloningModel(state_dim, action_dim)
-            model.load_state_dict(torch.load('bc_side_model.pt'))
-            model.eval()
+            fetch = SymFetch(gui= True, random_init=False, ego=ego)
+            fetch.generate_blocks(random_number=False, random_color=False, random_pos=False, rand=rand)
 
             bc_input = torch.zeros((state_dim), device=device)
             for i in range(3000):
@@ -60,7 +53,7 @@ if __name__ == '__main__':
                     fetch.set_joint_angles(pos)
                     # fetch.move_to(pos)
                     fetch.set_gripper(open=open_gripper)
-                    print(i, open_gripper, bc_input[-3:])
+                    # print(i, open_gripper, bc_input[-3:])
                 fetch.stepSimulation()
 
                 block_pos = np.array(p.getBasePositionAndOrientation(fetch.blockIds[0], 0)[0])
@@ -69,8 +62,19 @@ if __name__ == '__main__':
                     success += 1
                     print("-----success!------")
                     break
-                time.sleep(1./240.)                
+                # time.sleep(1./240.)                
             fetch.disconnect()
+    return success
+
+if __name__ == '__main__':
+        attempts = 20
+        state_dim = 2048 + 7 + 3 # 7 joints + 1 gripper + 2048 for R3M embedding
+        action_dim = 7 + 1 # 7 joint position changes + gripper action 
+
+        model = BehaviorCloningModel(state_dim, action_dim)
+        model.load_state_dict(torch.load('bc_ego2x2_25.pt'))
+        model.eval()
+        success = test_bc(attempts, model, state_dim, r3m, 0.01, True)
 
         print("-----------------------------")
         print("Successful {}/{} {} rate".format(success, attempts, success/attempts))

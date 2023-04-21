@@ -9,7 +9,7 @@ from sim_utils import SymFetch
 import torch
 from r3m import load_r3m
 
-goal_frequency = 2
+goal_frequency = 4
 
 if __name__ == '__main__':
     with torch.no_grad():

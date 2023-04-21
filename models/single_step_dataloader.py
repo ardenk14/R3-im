@@ -3,20 +3,20 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import os
 
-def get_dataloader(data_fp, batch_size=500):
+def get_dataloader(data_fp, batch_size=500, num_demonstrations=None):
     """
     """
-    d_set = FetchMotionDataset(data_fp)
+    d_set = FetchMotionDataset(data_fp, num_demonstrations=num_demonstrations)
     #print("DSET: ", len(d_set))
     
-    train_loader = DataLoader(d_set, batch_size=batch_size)
+    train_loader = DataLoader(d_set, batch_size=batch_size, drop_last=True)
     return train_loader
 
 class FetchMotionDataset(Dataset):
     """
     """
 
-    def __init__(self, data_folder, num_actions=5):
+    def __init__(self, data_folder, num_demonstrations=None):
         # This is how the data is setup
         """self.step_dtype = np.dtype([('xt', np.float32, 2048),
                             ('qt', np.float32, 7),
@@ -25,24 +25,26 @@ class FetchMotionDataset(Dataset):
                             ('xt_1', np.uint8, 2048),
                             ('qt_1', np.float32, 7),
                             ('qdott_1', np.float32, 7)])"""
-        self.num_actions = num_actions
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
         else:
             self.device = torch.device('cpu')
 
-        self.start_idx = [0]
+        nfiles = 0
         self.data = None
         for data_fp in os.listdir(data_folder):
-            if self.data is None:
+            if num_demonstrations is not None and nfiles >= num_demonstrations:
+                break
+            elif self.data is None:
                 self.data = np.load(os.path.join(data_folder, data_fp))['data']
-                self.start_idx.append(len(self.data))
+                nfiles+=1
             else:
                 # self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1), self.data), axis=1)
                 self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'], self.data))
+                nfiles+=1
             
-            self.trajectory_length = self.data.shape[0] # num inputs per run
+        self.trajectory_length = self.data.shape[0] # num inputs per run
 
         # move to tensors
         self.q1 = torch.tensor(self.data['q1'].copy(), device=self.device)
@@ -93,13 +95,13 @@ class FetchMotionDataset(Dataset):
         #     'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
         #     # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         # }
-        idx = item + np.random.randint(0,5)
+        idx = item + np.random.randint(0,3)
         if idx >= self.data.shape[0]:
             idx = self.data.shape[0] - 1
         sample = {
             'state': self.r3m1[item],
             'joint_state': torch.cat((self.q1[item], self.g1[item].reshape(-1))),
-            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[idx].reshape(-1))),
+            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1))),
             'next_state': self.r3m2[item],
             'goal': self.r3m2[idx],
 

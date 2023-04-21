@@ -60,10 +60,10 @@ if __name__ == '__main__':
         fps = 10
         n_samples = 200
         j = 0
-        while j < 20:
+        while j < 30:
             i = 0
-            fetch = SymFetch(gui=False, random_init=False)
-            fetch.generate_blocks(random_number=False, random_color=False, random_pos=False) #generate one block
+            fetch = SymFetch(gui=True, random_init=False, ego=False)
+            fetch.generate_blocks(random_number=False, random_color=False, random_pos=False, rand=0.01) #generate one block
             
             data = np.zeros(n_samples, dtype=step_dtype)
             # move above the block
@@ -125,11 +125,10 @@ if __name__ == '__main__':
             if block_pos[2] > 0.4:
                 data = data[:i]
                 print(i)
-                np.savez_compressed('ego_data{}'.format(j), data=data)
+                np.savez_compressed('./data/eval/side2x2/side_2cm{}'.format(j), data=data)
                 j += 1
                 print('\n\n-------------collected file', j, '--------------')
             else:
                 print('\n\n failed')
-            time.sleep(3)
-            p.disconnect()
+            fetch.disconnect()
 

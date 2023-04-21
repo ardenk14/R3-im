@@ -17,10 +17,10 @@ if __name__ == '__main__':
     model = GSPNet(state_dim, joint_state_dim, action_dim, num_actions=1)
     model.train()
     # Train forward model
-    forward_only_losses = model.train_forward_only(trainloader, num_epochs=50)
+    # forward_only_losses = model.train_forward_only(trainloader, num_epochs=25)
 
     # Train full model
-    full_model_losses = model.train_full_model(trainloader, num_epochs=150)
+    full_model_losses = model.train_full_model(trainloader, num_epochs=100)
 
     # Save the model
     print("Saving...")
