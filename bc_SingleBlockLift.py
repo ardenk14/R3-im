@@ -8,6 +8,7 @@ import cv2
 import torch
 from sim_utils import SymFetch
 from models.behavior_cloning_net import BehaviorCloningModel
+import imageio
 
 import torch
 from r3m import load_r3m
@@ -22,16 +23,20 @@ r3m.eval()
 r3m.to(device)
 
 
-def test_bc(attempts, model, state_dim, r3m, rand, ego=False):
+def test_bc(attempts, model, state_dim, r3m, rand, ego=False, gif=False):
     with torch.no_grad():
         success = 0
         for j in range(attempts):
+            if gif:
+                images = []
             fetch = SymFetch(gui= True, random_init=False, ego=ego)
             fetch.generate_blocks(random_number=False, random_color=False, random_pos=False, rand=rand)
 
             bc_input = torch.zeros((state_dim), device=device)
             for i in range(3000):
                 if i%24==0:
+                    if gif:
+                        images.append(fetch.get_image(True))
                     im = torch.tensor(fetch.get_image(True))
 
                     # Set inputs for policy: State (joint positions and velocities) and R3M embedding
@@ -64,17 +69,20 @@ def test_bc(attempts, model, state_dim, r3m, rand, ego=False):
                     break
                 # time.sleep(1./240.)                
             fetch.disconnect()
+            if gif:
+                imageio.mimsave('bc_{}.gif'.format(j), images)
+
     return success
 
 if __name__ == '__main__':
-        attempts = 20
+        attempts = 5
         state_dim = 2048 + 7 + 3 # 7 joints + 1 gripper + 2048 for R3M embedding
         action_dim = 7 + 1 # 7 joint position changes + gripper action 
 
         model = BehaviorCloningModel(state_dim, action_dim)
-        model.load_state_dict(torch.load('bc_ego2x2_25.pt'))
+        model.load_state_dict(torch.load('models/bc_side2x2_30.pt'))
         model.eval()
-        success = test_bc(attempts, model, state_dim, r3m, 0.01, True)
+        success = test_bc(attempts, model, state_dim, r3m, 0.01, ego=False, gif=True)
 
         print("-----------------------------")
         print("Successful {}/{} {} rate".format(success, attempts, success/attempts))
