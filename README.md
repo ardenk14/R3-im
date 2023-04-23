@@ -12,6 +12,7 @@ We also extend R3M's behavior cloning expereiments by collecting training data a
 
 GSP Diagram:
 ![GSP_Diagram](https://user-images.githubusercontent.com/28988176/233678581-e15076ef-6ef7-4691-832e-c18b95988535.png)
+<img src = "https://user-images.githubusercontent.com/28988176/233678581-e15076ef-6ef7-4691-832e-c18b95988535.png" width = "200", height = "300" />
 
 References:
 1) R3M: https://arxiv.org/pdf/2203.12601.pdf
