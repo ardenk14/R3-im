@@ -10,6 +10,7 @@ from sim_utils import SymFetch
 from models.gsp_net import GSPNet
 from models.goal_recognizer_net import GoalReconizerNet
 from mpl_toolkits.axes_grid1 import ImageGrid
+import imageio
 
 import torch
 from r3m import load_r3m
@@ -24,6 +25,7 @@ r3m.eval()
 r3m.to(device)
 
 if __name__ == '__main__':
+    images = []
     with torch.no_grad():
         fetch = SymFetch(random_init=False)
         fetch.generate_blocks(random_number=False, random_color=False, random_pos=False)
@@ -34,11 +36,11 @@ if __name__ == '__main__':
 
         model = GSPNet(state_dim, joint_state_dim, action_dim, num_actions=1)
         # model.load_state_dict(torch.load('GSP_model.pt'))
-        model.load_state_dict(torch.load('GSP_model_long_horizon.pt'))
+        model.load_state_dict(torch.load('models/GSP_model.pt'))
         model.eval()
 
         gr = GoalReconizerNet(state_dim, 0)
-        gr.load_state_dict(torch.load('GoalRecognizer_net.pt'))
+        gr.load_state_dict(torch.load('models/GoalRecognizer_net.pt'))
         gr.eval()
 
         goals = np.load('goal.npy')
@@ -68,9 +70,9 @@ if __name__ == '__main__':
                 cv2.destroyAllWindows()
                 img = goals[goal_idx]['r3m'].astype(np.uint8)
                 # grid[row_idx].imshow(img)
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                cv2.imshow('goal', img)
-                cv2.waitKey(1000)
+                # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                # cv2.imshow('goal', img)
+                # cv2.waitKey(1000)
 
                 gr_score = 0
                 i_max = i + 1000
@@ -101,22 +103,24 @@ if __name__ == '__main__':
 
                         dist = ((features - goal)**2).sum().sqrt()
                         print(i, gr_score.item(), dist.item())
+                        stacked_img = np.concatenate((img, fetch.get_image(resize=True)), axis=0)
+                        images.append(stacked_img)
                     fetch.stepSimulation()
                     i+=1
                     time.sleep(1./240.)
                 
                 # grid[row_idx + len(goals)].imshow(fetch.get_image(resize=True))
-                stacked_img = np.concatenate((img, cv2.cvtColor(fetch.get_image(resize=True), cv2.COLOR_RGB2BGR)), axis=0)
-
-                if output_image is None:
-                    output_image = stacked_img
-                else:
-                    output_image = np.concatenate((output_image, stacked_img), axis=1)
+                # if output_image is None:
+                #     output_image = stacked_img
+                # else:
+                #     output_image = np.concatenate((output_image, stacked_img), axis=1)
 
             time.sleep(1)
         except KeyboardInterrupt as e:
             p.disconnect()
-
-        cv2.imshow('output', output_image)
-        cv2.imwrite('gsp_goals.png', output_image)
-        cv2.waitKey(0)
+        
+        print(len(images))
+        imageio.mimsave('GSP_gif.gif', images)#, format="GIF", duration=len(images)/10)
+        # cv2.imshow('output', output_image)
+        # cv2.imwrite('gsp_goals.png', output_image)
+        # cv2.waitKey(0)
