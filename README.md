@@ -6,9 +6,11 @@ R3M has been shown to improve learning efficiency when applied to a type of imit
 
 #### Behavior Cloning with pybullet and Fetch
 
-![Behavior_cloning_gif](bc_0.gif)
+![Behavior_cloning_gif](demos/bc_0.gif)
 
 We also extend R3M's behavior cloning expereiments by collecting training data and evaluating with the pybullet simulator and Fetch robot. Our chosen task is to pick up a small block from a table.
+
+![GSP_gif](demos/GSP_gif.gif)
 
 GSP Diagram:
 ![GSP_Diagram](https://user-images.githubusercontent.com/28988176/233678581-e15076ef-6ef7-4691-832e-c18b95988535.png)
