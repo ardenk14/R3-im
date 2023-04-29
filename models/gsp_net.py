@@ -55,8 +55,9 @@ class GSPNet(nn.Module):
         Forward pass through action predictor.
         Action policy network.
         """
+        batch_size = state.shape[0]
         inpt = torch.cat((state, joint_state, goal, last_action), dim=-1)
-        pred_next_action = self.MLP1(inpt)
+        pred_next_action = self.MLP1(inpt).reshape(batch_size, self.num_actions, self.action_dim)
         return pred_next_action
     
     def train_step_full(self, train_loader) -> float:
@@ -72,6 +73,7 @@ class GSPNet(nn.Module):
 
         for batch_idx, data in enumerate(train_loader):
             self.optimizer.zero_grad()
+            batch_size = data['state'].shape[0]
 
             # TODO: extract data correctly
             state = data['state']
@@ -82,14 +84,14 @@ class GSPNet(nn.Module):
             true_action = data['true_action']
 
             inpt = torch.cat((state, joint_state, goal, last_action), dim=-1)
-            pred_next_action = self.MLP1(inpt)
+            pred_next_action = self.MLP1(inpt).reshape(batch_size, self.num_actions, self.action_dim)
 
-            inpt2 = torch.cat((state, pred_next_action), dim=-1)
+            inpt2 = torch.cat((state, pred_next_action.view(batch_size, -1)), dim=-1)
             pred_ns_pred_a = self.MLP2(inpt2)
 
-            inpt3 = torch.cat((state, true_action), dim=-1)
+            inpt3 = torch.cat((state, true_action.view(batch_size, -1)), dim=-1)
             pred_ns_gt_a = self.MLP2(inpt3)
-
+            
             # TODO: WHY IS LOSS NEGATIVE? I think true_action must have values between 0 and 1
             loss = F.mse_loss(pred_ns_gt_a, next_state) + F.mse_loss(pred_ns_pred_a, next_state) + F.mse_loss(pred_next_action, true_action) #F.cross_entropy(pred_next_action, true_action)
             loss.backward()
@@ -128,6 +130,7 @@ class GSPNet(nn.Module):
 
         for batch_idx, data in enumerate(train_loader):
             self.optimizer.zero_grad()
+            batch_size = data['state'].shape[0]
 
             # TODO: extract data correctly
             state = data['state']
@@ -136,7 +139,7 @@ class GSPNet(nn.Module):
             #last_action = data['last_action']
             true_action = data['true_action']
 
-            inpt = torch.cat((state, true_action), dim=-1)
+            inpt = torch.cat((state, true_action.view(batch_size, -1)), dim=-1)
             pred_ns_gt_a = self.MLP2(inpt)
 
             loss = F.mse_loss(pred_ns_gt_a, next_state)

@@ -74,6 +74,8 @@ class SymFetch():
         # Set camera properties and positions
         self.img_width = 640
         self.img_height = 480
+        # self.img_width = 1280
+        # self.img_height = 1280
 
         self.cam_fov = 54
         self.img_aspect = self.img_width / self.img_height
@@ -103,12 +105,12 @@ class SymFetch():
                 mug_x = np.random.uniform(block_x_lim[0], block_x_lim[1], 1)
                 mug_y = np.random.uniform(block_y_lim[0], block_y_lim[1], 1)
             else:
-                mug_x = 0.65 + np.random.uniform(-rand, rand)
-                mug_y = 0.3 + np.random.uniform(-rand, rand)
+                # mug_x = 0.65 + np.random.uniform(-rand, rand)
+                # mug_y = 0.3 + np.random.uniform(-rand, rand)
 
                 #FOR TESTING GSP
-                # mug_x = 0.65#+ np.random.uniform(-rand, rand)
-                # mug_y = 0.3# + np.random.uniform(-rand, rand)
+                mug_x = 0.65#+ np.random.uniform(-rand, rand)
+                mug_y = 0.3# + np.random.uniform(-rand, rand)
             if random_color:
                 urdf_file = np.random.choice(['./objects/red_block.urdf', './objects/blue_block.urdf', './objects/green_block.urdf'])
             else:

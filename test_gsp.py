@@ -25,7 +25,9 @@ r3m.eval()
 r3m.to(device)
 
 if __name__ == '__main__':
-    images = []
+    goal_images = []
+    current_images = []
+
     with torch.no_grad():
         fetch = SymFetch(random_init=False)
         fetch.generate_blocks(random_number=False, random_color=False, random_pos=False)
@@ -103,8 +105,11 @@ if __name__ == '__main__':
 
                         dist = ((features - goal)**2).sum().sqrt()
                         print(i, gr_score.item(), dist.item())
-                        stacked_img = np.concatenate((img, fetch.get_image(resize=True)), axis=0)
-                        images.append(stacked_img)
+                        # stacked_img = np.concatenate((img, fetch.get_image(resize=True)), axis=0)
+
+
+                        goal_images.append(img)
+                        current_images.append(fetch.get_image(resize=True))
                     fetch.stepSimulation()
                     i+=1
                     time.sleep(1./240.)
@@ -119,8 +124,9 @@ if __name__ == '__main__':
         except KeyboardInterrupt as e:
             p.disconnect()
         
-        print(len(images))
-        imageio.mimsave('GSP_gif.gif', images)#, format="GIF", duration=len(images)/10)
+        print(len(goal_images))
+        imageio.mimsave('goal_images.gif', goal_images)#, format="GIF", duration=len(images)/10)
+        imageio.mimsave('current_images.gif', current_images)
         # cv2.imshow('output', output_image)
         # cv2.imwrite('gsp_goals.png', output_image)
         # cv2.waitKey(0)

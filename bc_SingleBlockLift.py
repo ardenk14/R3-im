@@ -70,19 +70,19 @@ def test_bc(attempts, model, state_dim, r3m, rand, ego=False, gif=False):
                 # time.sleep(1./240.)                
             fetch.disconnect()
             if gif:
-                imageio.mimsave('bc_{}.gif'.format(j), images)
+                imageio.mimsave('bc_ego_2x2_30.gif', images)
 
     return success
 
 if __name__ == '__main__':
-        attempts = 5
+        attempts = 1
         state_dim = 2048 + 7 + 3 # 7 joints + 1 gripper + 2048 for R3M embedding
         action_dim = 7 + 1 # 7 joint position changes + gripper action 
 
         model = BehaviorCloningModel(state_dim, action_dim)
-        model.load_state_dict(torch.load('models/bc_side2x2_30.pt'))
+        model.load_state_dict(torch.load('models/bc_ego2x2_30.pt'))
         model.eval()
-        success = test_bc(attempts, model, state_dim, r3m, 0.01, ego=False, gif=True)
+        success = test_bc(attempts, model, state_dim, r3m, 0.02, ego=True, gif=True)
 
         print("-----------------------------")
         print("Successful {}/{} {} rate".format(success, attempts, success/attempts))

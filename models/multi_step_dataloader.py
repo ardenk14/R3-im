@@ -16,7 +16,7 @@ class FetchMotionDataset(Dataset):
     """
     """
 
-    def __init__(self, data_folder, num_demonstrations=None):
+    def __init__(self, data_folder, num_actions=5, num_demonstrations=None):
         # This is how the data is setup
         """self.step_dtype = np.dtype([('xt', np.float32, 2048),
                             ('qt', np.float32, 7),
@@ -30,19 +30,23 @@ class FetchMotionDataset(Dataset):
             self.device = torch.device('cuda')
         else:
             self.device = torch.device('cpu')
-
+        self.num_actions = num_actions
         nfiles = 0
         self.data = None
+        self.file_number = None
         for data_fp in os.listdir(data_folder):
             if num_demonstrations is not None and nfiles >= num_demonstrations:
                 break
             elif self.data is None:
                 self.data = np.load(os.path.join(data_folder, data_fp))['data']
                 nfiles+=1
+                self.file_number = np.ones(self.data.shape[0]) * nfiles
             else:
                 # self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'].reshape(-1,1), self.data), axis=1)
-                self.data = np.concatenate((np.load(os.path.join(data_folder, data_fp))['data'], self.data))
+                new_data = np.load(os.path.join(data_folder, data_fp))['data']
+                self.data = np.concatenate((new_data, self.data))
                 nfiles+=1
+                self.file_number = np.concatenate((np.ones(self.data.shape[0]) * nfiles, self.file_number))
             
         self.trajectory_length = self.data.shape[0] # num inputs per run
 
@@ -95,14 +99,22 @@ class FetchMotionDataset(Dataset):
         #     'true_action': torch.cat((self.q2[index, run] - self.q1[index,run], self.g2[index, run].reshape(-1)))
         #     # 'true_action': torch.cat((self.x2[index, run] - self.x1[index,run], self.g2[index, run].reshape(-1)))
         # }
-        idx = item + np.random.randint(0,5)
-        if idx >= self.data.shape[0]:
+        step = np.random.randint(0,self.num_actions)
+        if item+step > self.data.shape[0]:
             idx = self.data.shape[0] - 1
+        else:
+            while self.file_number[item] != self.file_number[item+step]:
+                step -= 1
+            idx = item + step
+
+        true_action = torch.zeros(5,8, device=self.device)
+        true_action[:step+1, :7] = self.q2[item:idx+1] - self.q1[item:idx+1]
+        true_action[:step+1, 7] = self.g2[item:idx+1]
         sample = {
             'state': self.r3m1[item],
             'joint_state': torch.cat((self.q1[item], self.g1[item].reshape(-1))),
-            'true_action': torch.cat((self.q2[item] - self.q1[item], self.g2[item].reshape(-1))),
-            'next_state': self.r3m2[item],
+            'true_action': true_action,
+            'next_state': self.r3m2[idx],
             'goal': self.r3m2[idx],
 
             'last_action': self.last_action[item]
