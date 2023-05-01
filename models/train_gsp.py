@@ -18,15 +18,15 @@ if __name__ == '__main__':
     model = GSPNet(state_dim, joint_state_dim, action_dim, num_actions=5)
     model.train()
     # Train forward model
-    forward_only_losses = model.train_forward_only(trainloader, num_epochs=25)
+    forward_only_losses = model.train_forward_only(trainloader, num_epochs=50)
 
     # Train full model
-    full_model_losses = model.train_full_model(trainloader, num_epochs=100)
+    full_model_losses = model.train_full_model(trainloader, num_epochs=200)
 
     # Save the model
     print("Saving...")
-    torch.save(model.state_dict(), 'GSP_model_long_horizon.pt')
-    print("Saved at GSP_model_long_horizon.pt")
+    torch.save(model.state_dict(), 'GSP_model_multistep.pt')
+    print("Saved at GSP_model_multistep.pt")
 
     # Plot forward only losses
     plt.plot([i for i in range(len(forward_only_losses))], forward_only_losses)

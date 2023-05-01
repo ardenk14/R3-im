@@ -36,9 +36,9 @@ if __name__ == '__main__':
         joint_state_dim = 7 + 3 # 7 joints + 1 gripper + 2048 for R3M embedding
         action_dim = 7 + 1 # 7 joint position changes + gripper action 
 
-        model = GSPNet(state_dim, joint_state_dim, action_dim, num_actions=1)
+        model = GSPNet(state_dim, joint_state_dim, action_dim, num_actions=5)
         # model.load_state_dict(torch.load('GSP_model.pt'))
-        model.load_state_dict(torch.load('models/GSP_model.pt'))
+        model.load_state_dict(torch.load('models/GSP_model_multistep.pt'))
         model.eval()
 
         gr = GoalReconizerNet(state_dim, 0)
@@ -47,7 +47,6 @@ if __name__ == '__main__':
 
         goals = np.load('goal.npy')
         last_action = torch.zeros(1, action_dim-1).to(device)
-        gsp_input = torch.zeros((state_dim), device=device)
         dist = 1
         k = 0
         pos = np.array([0.7, 0.0, 0.5])
@@ -57,6 +56,8 @@ if __name__ == '__main__':
                 fetch.stepSimulation()
                 time.sleep(1/240)
             k += 1
+
+        last_joint_state = torch.from_numpy(fetch.get_joint_angles()).to(device).float()
         
 
         # fig = plt.figure()
@@ -72,9 +73,9 @@ if __name__ == '__main__':
                 cv2.destroyAllWindows()
                 img = goals[goal_idx]['r3m'].astype(np.uint8)
                 # grid[row_idx].imshow(img)
-                # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                # cv2.imshow('goal', img)
-                # cv2.waitKey(1000)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                cv2.imshow('goal', img)
+                cv2.waitKey(1000)
 
                 gr_score = 0
                 i_max = i + 1000
@@ -87,29 +88,30 @@ if __name__ == '__main__':
                         # Get current state
                         joint_state = torch.from_numpy(fetch.get_joint_angles()).to(device).float()
                         full_joint_state = torch.cat((joint_state, torch.tensor(fetch.get_gripper_state()).to(device))).view(1,-1).float()
+                        last_action = joint_state - last_joint_state
 
                         # Get output from policy
-                        output = model(features, full_joint_state, goal, last_action)
-                        # last_action = output
+                        output = model(features, full_joint_state, goal, last_action.view(1,-1))[0]
+                        # last_action = output[0,:7]
+
                         output = output.detach().cpu().numpy()
+
                         # Set robot commands from policy
                         pos = output[0,:7] +  fetch.get_joint_angles()
-                        # pos = output[:3] +  fetch.get_ee_pos()
                         open_gripper = bool(round(output[0,-1]))
                         fetch.set_joint_angles(pos)
-                        # fetch.move_to(pos)
                         fetch.set_gripper(open=open_gripper)
+                        last_joint_state = joint_state
 
                         gr_score = gr(features, goal)
-                        # gr_score = np.linalg.norm(fetch.get_ee_pos() - goal_pos)
 
                         dist = ((features - goal)**2).sum().sqrt()
                         print(i, gr_score.item(), dist.item())
                         # stacked_img = np.concatenate((img, fetch.get_image(resize=True)), axis=0)
 
 
-                        goal_images.append(img)
-                        current_images.append(fetch.get_image(resize=True))
+                        # goal_images.append(img)
+                        # current_images.append(fetch.get_image(resize=True))
                     fetch.stepSimulation()
                     i+=1
                     time.sleep(1./240.)
@@ -124,9 +126,10 @@ if __name__ == '__main__':
         except KeyboardInterrupt as e:
             p.disconnect()
         
-        print(len(goal_images))
-        imageio.mimsave('goal_images.gif', goal_images)#, format="GIF", duration=len(images)/10)
-        imageio.mimsave('current_images.gif', current_images)
+        # print(len(goal_images))
+
+        # imageio.mimsave('goal_images.gif', goal_images)#, format="GIF", duration=len(images)/10)
+        # imageio.mimsave('current_images.gif', current_images)
         # cv2.imshow('output', output_image)
         # cv2.imwrite('gsp_goals.png', output_image)
         # cv2.waitKey(0)
